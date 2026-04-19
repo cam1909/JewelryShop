@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { COLORS } from '@/constants/theme';
-import { AppProvider } from '@/context/AppContext';
+import { AppProvider, useAppContext } from '@/context/AppContext';
 import SplashScreen from '@/screens/SplashScreen';
 
-// Custom dark theme for VELMORA
-const VelmoraTheme = {
+// Custom light theme
+const VelmoraLightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: COLORS.primary,
+    background: COLORS.white,
+    card: '#F5F5F5',
+    text: COLORS.black,
+    border: '#E5E5E5',
+    notification: COLORS.sale,
+  },
+};
+
+// Custom dark theme
+const VelmoraDarkTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
@@ -25,6 +43,54 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+function AppContent() {
+  const { theme } = useAppContext();
+  const isDarkMode = theme === 'dark';
+
+  return (
+    <ThemeProvider value={isDarkMode ? VelmoraDarkTheme : VelmoraLightTheme}>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: isDarkMode ? COLORS.bgDark : COLORS.white },
+          headerTintColor: isDarkMode ? COLORS.white : COLORS.black,
+          headerTitleStyle: { fontWeight: '500' },
+          contentStyle: { backgroundColor: isDarkMode ? COLORS.bgDark : COLORS.white },
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="product/[id]"
+          options={{ headerShown: false, animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="login"
+          options={{ headerShown: false, animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="register"
+          options={{ headerShown: false, animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="search"
+          options={{ headerShown: false, animation: 'fade' }}
+        />
+        <Stack.Screen
+          name="about"
+          options={{ headerShown: false, animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{ headerShown: false, animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: 'modal', title: 'Chi Tiết' }}
+        />
+      </Stack>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+    </ThemeProvider>
+  );
+}
+
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
 
@@ -34,42 +100,7 @@ export default function RootLayout() {
 
   return (
     <AppProvider>
-      <ThemeProvider value={VelmoraTheme}>
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: COLORS.bgDark },
-            headerTintColor: COLORS.white,
-            headerTitleStyle: { fontWeight: '500' },
-            contentStyle: { backgroundColor: COLORS.bgDark },
-          }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="product/[id]"
-            options={{ headerShown: false, animation: 'slide_from_right' }}
-          />
-          <Stack.Screen
-            name="login"
-            options={{ headerShown: false, animation: 'slide_from_bottom' }}
-          />
-          <Stack.Screen
-            name="register"
-            options={{ headerShown: false, animation: 'slide_from_bottom' }}
-          />
-          <Stack.Screen
-            name="search"
-            options={{ headerShown: false, animation: 'fade' }}
-          />
-          <Stack.Screen
-            name="about"
-            options={{ headerShown: false, animation: 'slide_from_right' }}
-          />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: 'modal', title: 'Chi Tiết' }}
-          />
-        </Stack>
-        <StatusBar style="light" />
-      </ThemeProvider>
+      <AppContent />
     </AppProvider>
   );
 }

@@ -34,6 +34,8 @@ interface User {
   email: string;
 }
 
+type ThemeType = 'light' | 'dark';
+
 // ========== UTILS ==========
 export const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -221,21 +223,26 @@ export const MOCK_COLLECTIONS: Collection[] = [
 interface AppContextType {
   products: Product[];
   collections: Collection[];
-  wishlist: string[];
-  toggleWishlist: (productId: string) => void;
-  isInWishlist: (productId: string) => boolean;
   cart: CartItem[];
-  addToCart: (product: Product, quantity: number, size: string) => void;
-  removeFromCart: (productId: string, size: string) => void;
-  updateQuantity: (productId: string, size: string, newQuantity: number) => void;
-  clearCart: () => void;
-  cartTotal: number;
-  shippingFee: number;
+  wishlist: string[];
   isAuthenticated: boolean;
   user: User | null;
+  theme: ThemeType;
+  addToCart: (product: Product, quantity: number, size: string) => void;
+  removeFromCart: (productId: string, selectedSize?: string) => void;
+  updateQuantity: (productId: string, newQuantity: number, selectedSize?: string) => void;
+  clearCart: () => void;
+  toggleWishlist: (productId: string) => void;
+  isInWishlist: (productId: string) => boolean;
   login: (user: User) => void;
   logout: () => void;
+  toggleTheme: () => void;
 }
+
+// ========== UTILS ==========
+export const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+};
 
 // ========== CONTEXT ==========
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -252,12 +259,16 @@ export function useAppContext() {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [products] = useState<Product[]>(MOCK_PRODUCTS);
   const [collections] = useState<Collection[]>(MOCK_COLLECTIONS);
-  const [wishlist, setWishlist] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [theme, setTheme] = useState<ThemeType>('light');
 
-  // ===== AUTHENTICATION =====
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
   const login = (userData: User) => {
     setUser(userData);
     setIsAuthenticated(true);
@@ -271,25 +282,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setWishlist([]);
   };
 
-  // ===== WISHLIST =====
   const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      if (prev.includes(productId)) {
-        return prev.filter((id) => id !== productId);
-      }
-      return [...prev, productId];
-    });
+    setWishlist(prev => prev.filter(id => id !== productId));
   };
 
   const removeFromWishlist = (productId: string) => {
-    setWishlist((prev) => prev.filter((id) => id !== productId));
+    setWishlist(prev => prev.filter(id => id !== productId));
   };
 
   const isInWishlist = (productId: string) => {
     return wishlist.includes(productId);
   };
 
-  // ---- Cart ----
   const addToCart = (product: Product, quantity = 1, size?: string) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -310,14 +314,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const updateQuantity = (productId: string, size: string, newQuantity: number) => {
+  const updateQuantity = (productId: string, newQuantity: number, selectedSize?: string) => {
     if (newQuantity <= 0) {
-      removeFromCart(productId, size);
+      removeFromCart(productId, selectedSize);
       return;
     }
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId && item.selectedSize === size
+        item.id === productId && item.selectedSize === selectedSize
           ? { ...item, quantity: newQuantity }
           : item
       )
@@ -326,27 +330,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setCart([]);
 
-  // ===== COMPUTED VALUES =====
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = cartTotal > 0 && cartTotal < 10000000 ? 50000 : 0;
-
   const value = {
     products,
     collections,
-    wishlist,
-    toggleWishlist,
-    isInWishlist,
     cart,
+    wishlist,
+    isAuthenticated,
+    user,
+    theme,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
-    cartTotal,
-    shippingFee,
-    isAuthenticated,
-    user,
+    toggleWishlist,
+    isInWishlist,
     login,
     logout,
+    toggleTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

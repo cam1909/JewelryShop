@@ -52,11 +52,22 @@ export default function ProfileScreen() {
     // Optionally, show a toast or confirmation message
   };
 
+  const handleMenuItemPress = (route: string | null) => {
+    if (route) {
+      router.push(route as any);
+    }
+    // Handle other cases if needed, e.g., open a modal
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="Tài Khoản" rightIcon="settings-outline" />
+        <Header
+          title="Tài Khoản"
+          rightIcon="settings-outline"
+          onRightPress={() => router.push('/settings' as any)}
+        />
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -124,47 +135,48 @@ export default function ProfileScreen() {
 
         {/* Menu sections */}
         {MENU_SECTIONS.map((section) => (
-          <View key={section.title} style={styles.menuSection}>
-            <Text style={styles.menuSectionTitle}>{section.title}</Text>
-            <View style={styles.menuCard}>
-              {section.items.map((item, index) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[styles.menuItem, index < section.items.length - 1 && styles.menuItemBorder]}
-                  onPress={() => item.route && router.push(item.route as any)}>
-                  <View style={styles.menuItemLeft}>
-                    <View style={styles.menuIconWrap}>
-                      <Ionicons name={item.icon} size={20} color={COLORS.gold} />
+          <View key={section.title} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            {section.items.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.menuItem}
+                onPress={() => handleMenuItemPress(item.route)}>
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name={item.icon} size={22} color={COLORS.gray} />
+                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                </View>
+                <View style={styles.menuItemRight}>
+                  {item.badge && (
+                    <View
+                      style={[
+                        styles.badge,
+                        item.badge === 'VIP' ? styles.vipBadgeLabel : styles.defaultBadge,
+                      ]}>
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          item.badge === 'VIP' ? styles.vipBadgeText : styles.defaultBadgeText,
+                        ]}>
+                        {item.badge}
+                      </Text>
                     </View>
-                    <Text style={styles.menuItemLabel}>{item.label}</Text>
-                  </View>
-                  <View style={styles.menuItemRight}>
-                    {item.badge && (
-                      <View style={[styles.menuBadge, item.badge === 'VIP' && styles.menuBadgeVip]}>
-                        <Text style={[styles.menuBadgeText, item.badge === 'VIP' && styles.menuBadgeTextVip]}>
-                          {item.badge}
-                        </Text>
-                      </View>
-                    )}
-                    <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  )}
+                  <Ionicons name="chevron-forward" size={20} color={COLORS.grayLight} />
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         ))}
 
+        {/* Logout Button */}
         {isAuthenticated && (
-          <View style={styles.authSection}>
+          <View style={styles.logoutSection}>
             <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={20} color={COLORS.red} />
-              <Text style={styles.logoutText}>ĐĂNG XUẤT</Text>
+              <Text style={styles.logoutBtnText}>ĐĂNG XUẤT</Text>
             </TouchableOpacity>
           </View>
         )}
-
-        <Text style={styles.versionText}>VELMORA v1.0.0</Text>
-        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -219,19 +231,13 @@ const styles = StyleSheet.create({
   statDivider: { width: 0.5, height: 30, backgroundColor: COLORS.border },
 
   // Menu
-  menuSection: { marginHorizontal: SPACING.lg, marginTop: SPACING.xl },
-  menuSectionTitle: {
+  section: { marginHorizontal: SPACING.lg, marginTop: SPACING.xl },
+  sectionTitle: {
     color: COLORS.textSecondary,
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     marginBottom: SPACING.md,
     marginLeft: SPACING.sm,
-  },
-  menuCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 0.5,
-    borderColor: COLORS.border,
   },
   menuItem: {
     flexDirection: 'row',
@@ -287,27 +293,19 @@ const styles = StyleSheet.create({
   },
 
   // Logout
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: SPACING.lg,
-    marginTop: SPACING.xxl,
+  logoutSection: {
     padding: SPACING.lg,
-    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-    borderRadius: BORDER_RADIUS.md,
-    gap: SPACING.sm,
+    marginTop: SPACING.md,
   },
-  logoutText: {
-    color: COLORS.red,
+  logoutBtn: {
+    backgroundColor: COLORS.bgMuted,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+  },
+  logoutBtnText: {
+    color: COLORS.danger,
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
-  },
-
-  versionText: {
-    textAlign: 'center',
-    color: COLORS.textMuted,
-    fontSize: FONT_SIZES.xs,
-    marginTop: SPACING.xxl,
   },
 });
