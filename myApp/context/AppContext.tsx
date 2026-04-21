@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { Appearance } from 'react-native';
 
 // ========== TYPES ==========
 export interface Product {
@@ -30,16 +32,33 @@ export interface Collection {
 }
 
 interface User {
+  uid: string;
   name: string;
   email: string;
 }
 
 type ThemeType = 'light' | 'dark';
 
-// ========== UTILS ==========
-export const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-};
+interface AppContextType {
+  products: Product[];
+  collections: Collection[];
+  cart: CartItem[];
+  wishlist: string[];
+  isAuthenticated: boolean;
+  user: User | null;
+  theme: ThemeType;
+  cartTotal: number;
+  addToCart: (product: Product, quantity: number, size: string) => void;
+  removeFromCart: (productId: string, selectedSize?: string) => void;
+  updateQuantity: (productId: string, newQuantity: number, selectedSize?: string) => void;
+  clearCart: () => void;
+  toggleWishlist: (productId: string) => void;
+  isInWishlist: (productId: string) => boolean;
+  login: (user: User) => void;
+  logout: () => void;
+  toggleTheme: () => void;
+  formatPrice: (price: number) => string;
+}
 
 // ========== MOCK DATA ==========
 export const MOCK_PRODUCTS: Product[] = [
@@ -47,130 +66,130 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: '1', name: 'Dây Chuyền Hoa Vàng Rực Rỡ', category: 'DÂY CHUYỀN',
     price: 4500000, originalPrice: 5500000, rating: 4.5, reviews: 124,
-    badge: '-18%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-18%', badgeType: 'sale', image: require('@/assets/images/products/day1.jpg'), inStock: true,
   },
   {
     id: '4', name: 'Dây Chuyền Bạch Kim Đá Xanh', category: 'DÂY CHUYỀN',
     price: 12500000, originalPrice: null, rating: 4.5, reviews: 34,
-    badge: 'HẾT HÀNG', badgeType: 'outofstock', image: null, inStock: false,
+    badge: 'HẾT HÀNG', badgeType: 'outofstock', image: require('@/assets/images/products/day4.jpg'), inStock: false,
   },
   {
     id: '5', name: 'Dây Chuyền Ngọc Trai', category: 'DÂY CHUYỀN',
     price: 8500000, originalPrice: null, rating: 4.8, reviews: 89,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/day3.jpg'), inStock: true,
   },
   {
     id: '9', name: 'Dây Chuyền Kim Cương Giọt Nước', category: 'DÂY CHUYỀN',
     price: 18500000, originalPrice: 22000000, rating: 4.9, reviews: 45,
-    badge: '-16%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-16%', badgeType: 'sale', image: require('@/assets/images/products/day6.jpg'), inStock: true,
   },
   {
     id: '10', name: 'Dây Chuyền Vàng Ý 18K', category: 'DÂY CHUYỀN',
     price: 7200000, originalPrice: null, rating: 4.7, reviews: 156,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/day2.jpg'), inStock: true,
   },
   {
     id: '11', name: 'Dây Chuyền Ruby Hình Tim', category: 'DÂY CHUYỀN',
     price: 15800000, originalPrice: null, rating: 4.6, reviews: 28,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/day5.jpg'), inStock: true,
   },
 
   // ===== NHẪN =====
   {
     id: '2', name: 'Nhẫn Kim Cương Solitaire', category: 'NHẪN',
     price: 28000000, originalPrice: null, rating: 5, reviews: 56,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/nhan4.jpg'), inStock: true,
   },
   {
     id: '6', name: 'Nhẫn Kim Cương Halo', category: 'NHẪN',
     price: 32000000, originalPrice: null, rating: 5.0, reviews: 42,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/nhan5.jpg'), inStock: true,
   },
   {
     id: '12', name: 'Nhẫn Cưới Vàng Trắng', category: 'NHẪN',
     price: 9500000, originalPrice: 11000000, rating: 4.8, reviews: 312,
-    badge: '-14%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-14%', badgeType: 'sale', image: require('@/assets/images/products/nhan2.jpg'), inStock: true,
   },
   {
     id: '13', name: 'Nhẫn Đính Sapphire Xanh', category: 'NHẪN',
     price: 22000000, originalPrice: null, rating: 4.9, reviews: 67,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/nhan3.jpg'), inStock: true,
   },
   {
     id: '14', name: 'Nhẫn Vàng Hồng Minimalist', category: 'NHẪN',
     price: 5800000, originalPrice: null, rating: 4.4, reviews: 189,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/nhan1.jpg'), inStock: true,
   },
   {
     id: '15', name: 'Nhẫn Đôi Cưới Platinum', category: 'NHẪN',
     price: 38000000, originalPrice: null, rating: 5.0, reviews: 23,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/nhan6.jpg'), inStock: true,
   },
 
   // ===== BÔNG TAI =====
   {
     id: '3', name: 'Bông Tai Ngọc Trai Cổ Điển', category: 'BÔNG TAI',
     price: 3200000, originalPrice: 3800000, rating: 4.5, reviews: 201,
-    badge: '-16%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-16%', badgeType: 'sale', image: require('@/assets/images/products/bongtai1.jpg'), inStock: true,
   },
   {
     id: '8', name: 'Bông Tai Sapphire', category: 'BÔNG TAI',
     price: 15000000, originalPrice: null, rating: 4.9, reviews: 33,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/bongtai3.jpg'), inStock: true,
   },
   {
     id: '16', name: 'Bông Tai Kim Cương Tròn', category: 'BÔNG TAI',
     price: 19500000, originalPrice: null, rating: 4.8, reviews: 78,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/bongtai4.jpg'), inStock: true,
   },
   {
     id: '17', name: 'Bông Tai Vàng Hoa Mai', category: 'BÔNG TAI',
     price: 4800000, originalPrice: 5600000, rating: 4.6, reviews: 145,
-    badge: '-14%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-14%', badgeType: 'sale', image: require('@/assets/images/products/bongtai2.jpg'), inStock: true,
   },
   {
     id: '18', name: 'Bông Tai Dáng Dài Emerald', category: 'BÔNG TAI',
     price: 25000000, originalPrice: null, rating: 4.7, reviews: 19,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/bongtai5.jpg'), inStock: true,
   },
 
   // ===== LẮC TAY =====
   {
     id: '7', name: 'Lắc Tay Vàng Hồng', category: 'LẮC TAY',
     price: 6200000, originalPrice: null, rating: 4.6, reviews: 67,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/vongtay2.jpg'), inStock: true,
   },
   {
     id: '19', name: 'Lắc Tay Kim Cương Tennis', category: 'LẮC TAY',
     price: 45000000, originalPrice: null, rating: 5.0, reviews: 15,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/vongtay4.jpg'), inStock: true,
   },
   {
     id: '20', name: 'Lắc Tay Charm Vàng 18K', category: 'LẮC TAY',
     price: 8900000, originalPrice: 10500000, rating: 4.7, reviews: 203,
-    badge: '-15%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-15%', badgeType: 'sale', image: require('@/assets/images/products/vongtay3.jpg'), inStock: true,
   },
   {
     id: '21', name: 'Lắc Tay Ngọc Trai Biển', category: 'LẮC TAY',
     price: 5500000, originalPrice: null, rating: 4.5, reviews: 98,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/vongtay1.jpg'), inStock: true,
   },
 
   // ===== BỘ TRANG SỨC =====
   {
     id: '22', name: 'Bộ Trang Sức Cưới Kim Cương', category: 'BỘ TRANG SỨC',
     price: 85000000, originalPrice: null, rating: 5.0, reviews: 12,
-    badge: 'MỚI', badgeType: 'new', image: null, inStock: true,
+    badge: 'MỚI', badgeType: 'new', image: require('@/assets/images/products/botrangsuc3.jpg'), inStock: true,
   },
   {
     id: '23', name: 'Bộ Trang Sức Ngọc Trai Akoya', category: 'BỘ TRANG SỨC',
     price: 35000000, originalPrice: 42000000, rating: 4.9, reviews: 34,
-    badge: '-17%', badgeType: 'sale', image: null, inStock: true,
+    badge: '-17%', badgeType: 'sale', image: require('@/assets/images/products/botrangsuc2.jpg'), inStock: true,
   },
   {
     id: '24', name: 'Bộ Trang Sức Vàng Hoa Văn', category: 'BỘ TRANG SỨC',
     price: 28500000, originalPrice: null, rating: 4.8, reviews: 56,
-    badge: null, badgeType: null, image: null, inStock: true,
+    badge: null, badgeType: null, image: require('@/assets/images/products/botrangsuc1.jpg'), inStock: true,
   },
 ];
 
@@ -220,32 +239,12 @@ export const MOCK_COLLECTIONS: Collection[] = [
 ];
 
 // ========== CONTEXT ==========
-interface AppContextType {
-  products: Product[];
-  collections: Collection[];
-  cart: CartItem[];
-  wishlist: string[];
-  isAuthenticated: boolean;
-  user: User | null;
-  theme: ThemeType;
-  addToCart: (product: Product, quantity: number, size: string) => void;
-  removeFromCart: (productId: string, selectedSize?: string) => void;
-  updateQuantity: (productId: string, newQuantity: number, selectedSize?: string) => void;
-  clearCart: () => void;
-  toggleWishlist: (productId: string) => void;
-  isInWishlist: (productId: string) => boolean;
-  login: (user: User) => void;
-  logout: () => void;
-  toggleTheme: () => void;
-}
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // ========== UTILS ==========
 export const formatPrice = (price: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 };
-
-// ========== CONTEXT ==========
-const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function useAppContext() {
   const context = useContext(AppContext);
@@ -263,10 +262,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [theme, setTheme] = useState<ThemeType>('light');
+  const [theme, setTheme] = useState<ThemeType>(Appearance.getColorScheme() || 'dark');
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = (await AsyncStorage.getItem('theme')) as ThemeType;
+        if (savedTheme) {
+          setTheme(savedTheme);
+        }
+      } catch (e) {
+        console.error('Failed to load theme.', e);
+      }
+    };
+    loadTheme();
+  }, []);
+
+  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const toggleTheme = async () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    try {
+      await AsyncStorage.setItem('theme', newTheme);
+    } catch (e) {
+      console.error('Failed to save theme.', e);
+    }
   };
 
   const login = (userData: User) => {
@@ -283,11 +304,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleWishlist = (productId: string) => {
-    setWishlist(prev => prev.filter(id => id !== productId));
-  };
-
-  const removeFromWishlist = (productId: string) => {
-    setWishlist(prev => prev.filter(id => id !== productId));
+    setWishlist(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   const isInWishlist = (productId: string) => {
@@ -296,10 +317,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Product, quantity = 1, size?: string) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find(
+        (item) => item.id === product.id && item.selectedSize === size
+      );
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
+          item.id === product.id && item.selectedSize === size
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
@@ -308,9 +331,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeFromCart = (productId: string, size: string) => {
+  const removeFromCart = (productId: string, selectedSize?: string) => {
     setCart((prev) =>
-      prev.filter((item) => !(item.id === productId && item.selectedSize === size))
+      prev.filter(
+        (item) => !(item.id === productId && item.selectedSize === selectedSize)
+      )
     );
   };
 
@@ -330,7 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setCart([]);
 
-  const value = {
+  const contextValue = {
     products,
     collections,
     cart,
@@ -338,6 +363,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isAuthenticated,
     user,
     theme,
+    cartTotal,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -347,7 +373,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     toggleTheme,
+    formatPrice,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 }

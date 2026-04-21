@@ -1,18 +1,17 @@
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { formatPrice, useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '@/components/Header';
-import { useAppContext, formatPrice } from '@/context/AppContext';
-import { useRouter } from 'expo-router';
 
 export default function CartScreen() {
   const { cart, removeFromCart, updateQuantity, clearCart, cartTotal, isAuthenticated } = useAppContext();
@@ -27,7 +26,7 @@ export default function CartScreen() {
       return;
     }
     // Proceed to checkout
-    alert('Chuyển đến trang thanh toán!');
+    router.push('/checkout');
   };
 
   return (
@@ -82,13 +81,13 @@ export default function CartScreen() {
                     <View style={styles.quantityControl}>
                       <TouchableOpacity
                         style={styles.qtyBtn}
-                        onPress={() => updateQuantity(item.id, item.selectedSize || '', item.quantity - 1)}>
+                        onPress={() => updateQuantity(item.id, item.quantity - 1, item.selectedSize)}>
                         <Ionicons name="remove" size={16} color={COLORS.white} />
                       </TouchableOpacity>
                       <Text style={styles.qtyText}>{item.quantity}</Text>
                       <TouchableOpacity
                         style={styles.qtyBtn}
-                        onPress={() => updateQuantity(item.id, item.selectedSize || '', item.quantity + 1)}>
+                        onPress={() => updateQuantity(item.id, item.quantity + 1, item.selectedSize)}>
                         <Ionicons name="add" size={16} color={COLORS.white} />
                       </TouchableOpacity>
                     </View>

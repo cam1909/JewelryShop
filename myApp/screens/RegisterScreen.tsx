@@ -44,7 +44,7 @@ export default function RegisterScreen() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       // Now login the user in our app's context
-      login({ name: name || 'New User', email: user.email! });
+      login({ uid: user.uid, name: name || 'New User', email: user.email! });
       // Navigate to the profile page or home
       router.replace('/(tabs)/profile');
     } catch (error: any) {

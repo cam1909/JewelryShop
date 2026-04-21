@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import { COLORS } from '@/constants/theme';
 import { AppProvider, useAppContext } from '@/context/AppContext';
 import SplashScreen from '@/screens/SplashScreen';
+import {
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
+} from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import React, { useState } from 'react';
+import 'react-native-reanimated';
 
 // Custom light theme
 const VelmoraLightTheme = {
@@ -79,6 +79,14 @@ function AppContent() {
         />
         <Stack.Screen
           name="settings"
+          options={{ headerShown: false, animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="faq"
+          options={{ title: '', animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="contact"
           options={{ headerShown: false, animation: 'slide_from_right' }}
         />
         <Stack.Screen

@@ -1,16 +1,17 @@
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Linking,
   ScrollView,
-  TouchableOpacity,
   StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
 const MILESTONES = [
   { year: '2003', title: 'Thành lập', desc: 'VELMORA ra đời với xưởng chế tác đầu tiên tại TP.HCM' },
@@ -151,8 +152,8 @@ export default function AboutScreen() {
           </View>
 
           {[
-            { icon: 'location-outline' as const, label: '123 Đồng Khởi, Q.1, TP.HCM' },
-            { icon: 'call-outline' as const, label: '1900 1234 56' },
+            { icon: 'location-outline' as const, label: '235 Hoàng Quốc Việt, Cầu Giấy, Hà Nội' },
+            { icon: 'call-outline' as const, label: '0962 977 820' },
             { icon: 'mail-outline' as const, label: 'contact@velmora.vn' },
             { icon: 'time-outline' as const, label: '09:00 - 21:00, T2 - CN' },
           ].map((c, i) => (
@@ -166,9 +167,13 @@ export default function AboutScreen() {
 
           {/* Social */}
           <View style={styles.socialRow}>
-            {['logo-facebook', 'logo-instagram', 'logo-tiktok', 'logo-youtube'].map((icon, i) => (
-              <TouchableOpacity key={i} style={styles.socialBtn}>
-                <Ionicons name={icon as any} size={22} color={COLORS.gold} />
+            {[
+              { icon: 'logo-facebook', link: 'https://www.facebook.com/profile.php?id=61584859067174' },
+              { icon: 'logo-instagram', link: 'https://www.instagram.com/cmcm.1909/?hl=vi' },
+              { icon: 'logo-tiktok', link: 'https://zalo.me/0962977820' },
+            ].map((social, i) => (
+              <TouchableOpacity key={i} style={styles.socialBtn} onPress={() => Linking.openURL(social.link)}>
+                <Ionicons name={social.icon as any} size={22} color={COLORS.gold} />
               </TouchableOpacity>
             ))}
           </View>

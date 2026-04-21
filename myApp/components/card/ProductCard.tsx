@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { Product, formatPrice, useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Dimensions, Image as RNImage, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -28,16 +29,17 @@ const renderStars = (rating: number) => {
 };
 
 export default function ProductCard({ product, cardWidth, onPress }: ProductCardProps) {
-  const { isInWishlist, addToWishlist, removeFromWishlist } = useAppContext();
+  const { isInWishlist, toggleWishlist, isAuthenticated } = useAppContext();
+  const router = useRouter();
   const liked = isInWishlist(product.id);
   const width = cardWidth || (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.md) / 2;
 
-  const toggleWishlist = () => {
-    if (liked) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist(product);
+  const handleWishlistToggle = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
     }
+    toggleWishlist(product.id);
   };
 
   return (
@@ -47,9 +49,13 @@ export default function ProductCard({ product, cardWidth, onPress }: ProductCard
       onPress={onPress}>
       {/* Image */}
       <View style={styles.imageWrap}>
-        <View style={styles.imagePlaceholder}>
-          <Ionicons name="diamond-outline" size={40} color={COLORS.borderLight} />
-        </View>
+        {product.image ? (
+          <RNImage source={product.image} style={styles.image} />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="diamond-outline" size={40} color={COLORS.borderLight} />
+          </View>
+        )}
 
         {/* Badge */}
         {product.badge && (
@@ -65,7 +71,7 @@ export default function ProductCard({ product, cardWidth, onPress }: ProductCard
         )}
 
         {/* Wishlist button */}
-        <TouchableOpacity style={styles.wishlistBtn} onPress={toggleWishlist}>
+        <TouchableOpacity style={styles.wishlistBtn} onPress={handleWishlistToggle}>
           <Ionicons
             name={liked ? 'heart' : 'heart-outline'}
             size={20}
@@ -104,6 +110,11 @@ const styles = StyleSheet.create({
   imageWrap: {
     height: 200,
     position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   imagePlaceholder: {
     flex: 1,

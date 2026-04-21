@@ -1,22 +1,22 @@
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
+import { auth } from '@/firebase';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  StatusBar,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useAppContext } from '@/context/AppContext';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/firebase';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function LoginScreen() {
       const user = userCredential.user;
       // You might want to fetch the user's name from your database here
       // For now, we'll use the email as a placeholder name
-      login({ name: user.displayName || user.email!, email: user.email! });
+      login({ uid: user.uid, name: user.displayName || user.email!, email: user.email! });
       router.replace('/(tabs)/profile');
     } catch (error: any) {
       alert(`Lỗi đăng nhập: ${error.message}`);

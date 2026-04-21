@@ -1,21 +1,21 @@
-import React, { useState, useRef } from 'react';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { Product, formatPrice, useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Animated,
+  Dimensions,
+  Modal,
   ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Dimensions,
-  StatusBar,
-  Animated,
-  Modal,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAppContext, Product, formatPrice } from '@/context/AppContext';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -179,6 +179,16 @@ export default function ProductDetailScreen() {
     setShowSheet(true);
   };
 
+  const handleBuyNowPress = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    // Add to cart and navigate to checkout
+    addToCart(product, 1, 'default');
+    router.push('/checkout');
+  };
+
   const handleConfirmAdd = (size: string | null, qty: number) => {
     addToCart(product, qty, size || 'default');
     setShowSheet(false);
@@ -336,7 +346,7 @@ export default function ProductDetailScreen() {
         </Animated.View>
         <TouchableOpacity
           style={styles.buyNowBtn}
-          onPress={handleAddToCartPress}
+          onPress={handleBuyNowPress}
           disabled={!product.inStock}>
           <Text style={styles.buyNowText}>MUA NGAY</Text>
         </TouchableOpacity>

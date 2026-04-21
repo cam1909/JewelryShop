@@ -1,23 +1,38 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-  StatusBar,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
-import { useAppContext, formatPrice } from '@/context/AppContext';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { formatPrice, useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+    Dimensions,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function WishlistScreen() {
-  const { wishlist, products, toggleWishlist, addToCart } = useAppContext();
+  const { wishlist, products, toggleWishlist, addToCart, isAuthenticated } = useAppContext();
+  const [addedToCart, setAddedToCart] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleAddToCart = (item: any) => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    addToCart(item, 1, item.size || '');
+    setAddedToCart(item.id);
+    setTimeout(() => {
+      setAddedToCart(null);
+    }, 1000); // Hide message after 1 second
+  };
 
   const wishlistedProducts = products.filter((p) => wishlist.includes(p.id));
 
@@ -37,7 +52,7 @@ export default function WishlistScreen() {
           <Text style={styles.emptyDesc}>
             Khám phá các bộ sưu tập và thêm những{'\n'}sản phẩm bạn yêu thích vào đây
           </Text>
-          <TouchableOpacity style={styles.emptyBtn}>
+          <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/collections')}>
             <Text style={styles.emptyBtnText}>KHÁM PHÁ NGAY</Text>
           </TouchableOpacity>
         </View>
@@ -69,12 +84,24 @@ export default function WishlistScreen() {
                     )}
                   </View>
                   <TouchableOpacity
-                    style={[styles.addToCartBtn, !item.inStock && styles.addToCartDisabled]}
-                    disabled={!item.inStock}
-                    onPress={() => addToCart(item, 1, item.size || '')}>
-                    <Ionicons name="bag-add-outline" size={16} color={item.inStock ? COLORS.black : COLORS.textMuted} />
-                    <Text style={[styles.addToCartText, !item.inStock && styles.addToCartTextDisabled]}>
-                      {item.inStock ? 'THÊM VÀO GIỎ' : 'HẾT HÀNG'}
+                    style={[
+                      styles.addToCartBtn,
+                      !item.inStock && styles.addToCartDisabled,
+                      addedToCart === item.id && styles.addedBtn,
+                    ]}
+                    disabled={!item.inStock || addedToCart === item.id}
+                    onPress={() => handleAddToCart(item)}>
+                    <Ionicons
+                      name={addedToCart === item.id ? 'checkmark' : 'bag-add-outline'}
+                      size={16}
+                      color={item.inStock ? COLORS.black : COLORS.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.addToCartText,
+                        !item.inStock && styles.addToCartTextDisabled,
+                      ]}>
+                      {addedToCart === item.id ? 'ĐÃ THÊM' : item.inStock ? 'THÊM VÀO GIỎ' : 'HẾT HÀNG'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -136,6 +163,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm, borderRadius: BORDER_RADIUS.sm,
   },
   addToCartDisabled: { backgroundColor: COLORS.bgCardLight },
+  addedBtn: { backgroundColor: COLORS.green },
   addToCartText: { color: COLORS.black, fontSize: FONT_SIZES.xs, fontWeight: '700', letterSpacing: 1 },
   addToCartTextDisabled: { color: COLORS.textMuted },
 });

@@ -1,24 +1,22 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState, useMemo, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-  StatusBar,
-  TextInput,
-  FlatList,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import SectionHeader from '@/components/SectionHeader';
 import ProductCard from '@/components/card/ProductCard';
-import CollectionCard from '@/components/card/CollectionCard';
-import { useAppContext, MOCK_PRODUCTS, formatPrice } from '@/context/AppContext';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { formatPrice, useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Dimensions,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -163,18 +161,6 @@ export default function CollectionsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        )}
-
-        {/* Show Collections when "All" is selected */}
-        {selectedCategory === 'all' && searchText.length === 0 && (
-          <>
-            <View style={styles.section}>
-              <SectionHeader subtitle="BỘ SƯU TẬP NỔI BẬT" title="Khám Phá Bộ Sưu Tập" />
-            </View>
-            {collections.map((c) => (
-              <CollectionCard key={c.id} collection={c} />
-            ))}
-          </>
         )}
 
         {/* Result header */}

@@ -1,18 +1,18 @@
+import Header from '@/components/Header';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity,
   StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '@/components/Header';
-import { useRouter } from 'expo-router';
-import { useAppContext } from '@/context/AppContext';
 
 const MENU_SECTIONS = [
   {
@@ -35,9 +35,9 @@ const MENU_SECTIONS = [
   {
     title: 'Hỗ Trợ',
     items: [
-      { id: '8', icon: 'chatbubble-outline' as const, label: 'Liên hệ tư vấn', badge: null, route: null },
-      { id: '9', icon: 'help-circle-outline' as const, label: 'Câu hỏi thường gặp', badge: null, route: null },
-      { id: '10', icon: 'settings-outline' as const, label: 'Cài đặt', badge: null, route: null },
+      { id: '8', icon: 'chatbubble-outline' as const, label: 'Liên hệ tư vấn', badge: null, route: '/contact' },
+      { id: '9', icon: 'help-circle-outline' as const, label: 'Câu hỏi thường gặp', badge: null, route: '/faq' },
+      { id: '10', icon: 'settings-outline' as const, label: 'Cài đặt', badge: null, route: '/settings' },
       { id: '11', icon: 'information-circle-outline' as const, label: 'Giới thiệu', badge: null, route: '/about' },
     ],
   },
@@ -63,11 +63,7 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header
-          title="Tài Khoản"
-          rightIcon="settings-outline"
-          onRightPress={() => router.push('/settings' as any)}
-        />
+        <Header title="Tài Khoản" />
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -143,26 +139,26 @@ export default function ProfileScreen() {
                 style={styles.menuItem}
                 onPress={() => handleMenuItemPress(item.route)}>
                 <View style={styles.menuItemLeft}>
-                  <Ionicons name={item.icon} size={22} color={COLORS.gray} />
+                  <Ionicons name={item.icon} size={22} color={COLORS.textMuted} />
                   <Text style={styles.menuItemLabel}>{item.label}</Text>
                 </View>
                 <View style={styles.menuItemRight}>
                   {item.badge && (
                     <View
                       style={[
-                        styles.badge,
-                        item.badge === 'VIP' ? styles.vipBadgeLabel : styles.defaultBadge,
+                        styles.menuBadge,
+                        item.badge === 'VIP' ? styles.menuBadgeVip : {},
                       ]}>
                       <Text
                         style={[
-                          styles.badgeText,
-                          item.badge === 'VIP' ? styles.vipBadgeText : styles.defaultBadgeText,
+                          styles.menuBadgeText,
+                          item.badge === 'VIP' ? styles.menuBadgeTextVip : {},
                         ]}>
                         {item.badge}
                       </Text>
                     </View>
                   )}
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.grayLight} />
+                  <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -298,13 +294,13 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
   },
   logoutBtn: {
-    backgroundColor: COLORS.bgMuted,
+    backgroundColor: COLORS.bgCard,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
   },
   logoutBtnText: {
-    color: COLORS.danger,
+    color: COLORS.red,
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
   },

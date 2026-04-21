@@ -1,23 +1,23 @@
-import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-  StatusBar,
-  Animated,
-  FlatList,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import SectionHeader from '@/components/SectionHeader';
 import ProductCard from '@/components/card/ProductCard';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
+import {
+  Animated,
+  Dimensions,
+  FlatList,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -107,7 +107,7 @@ function CategorySection() {
 function BenefitsSection() {
   return (
     <View style={styles.benefitsSection}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.benefitsList}>
+      <View style={styles.benefitsGrid}>
         {BENEFITS.map((b) => (
           <View key={b.id} style={styles.benefitCard}>
             <View style={styles.benefitIconWrap}>
@@ -119,7 +119,7 @@ function BenefitsSection() {
             </View>
           </View>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -261,12 +261,23 @@ const styles = StyleSheet.create({
   benefitsSection: {
     backgroundColor: COLORS.bgCard,
     paddingVertical: SPACING.xxl,
+    paddingHorizontal: SPACING.lg,
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
     borderColor: COLORS.border,
   },
-  benefitsList: { paddingHorizontal: SPACING.lg, gap: SPACING.lg },
-  benefitCard: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, width: 220 },
+  benefitsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  benefitCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    width: '48%', // Approximately 2 items per row with some spacing
+    marginBottom: SPACING.lg,
+  },
   benefitIconWrap: {
     width: 44,
     height: 44,

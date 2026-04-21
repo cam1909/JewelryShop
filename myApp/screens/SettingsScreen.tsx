@@ -1,89 +1,102 @@
 
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter }s from 'expo-router';
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { AppContext } from '../context/AppContext';
-import { Colors, Theme } from '../constants/theme';
+import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
 
 const SettingsScreen = () => {
   const router = useRouter();
-  const { theme, toggleTheme } = useContext(AppContext);
+  const { theme, toggleTheme, logout, user } = useAppContext();
   const isDarkMode = theme === 'dark';
 
-  const styles = getStyles(isDarkMode ? Theme.dark : Theme.light);
+  const handleLogout = () => {
+    logout();
+    router.replace('/(tabs)');
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? COLORS.bgDark : COLORS.white }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={styles.headerText.color} />
+          <Ionicons name="arrow-back" size={24} color={isDarkMode ? COLORS.white : COLORS.black} />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Cài đặt</Text>
+        <Text style={[styles.headerText, { color: isDarkMode ? COLORS.white : COLORS.black }]}>Cài đặt</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Giao diện</Text>
-        <View style={styles.item}>
-          <Text style={styles.itemText}>Chế độ tối</Text>
-          <Switch
-            trackColor={{ false: '#767577', true: Colors.primary }}
-            thumbColor={isDarkMode ? Colors.secondary : '#f4f3f4'}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleTheme}
-            value={isDarkMode}
-          />
+      {user && (
+        <View style={styles.profileSection}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
+          </View>
+          <Text style={[styles.userName, { color: isDarkMode ? COLORS.white : COLORS.black }]}>{user.name}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
         </View>
+      )}
+
+      <View style={styles.updateSection}>
+        <Text style={[styles.updateText, { color: isDarkMode ? COLORS.white : COLORS.black }]}>Đang cập nhật...</Text>
       </View>
     </View>
   );
 };
 
-const getStyles = (theme: typeof Theme.light) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.background,
     paddingTop: Platform.OS === 'android' ? 40 : 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.border,
   },
   backButton: {
-    marginRight: 16,
+    marginRight: SPACING.lg,
   },
   headerText: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.xl,
     fontWeight: 'bold',
-    color: theme.text,
   },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.textMuted,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  item: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  profileSection: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: SPACING.xxl,
     borderBottomWidth: 1,
-    borderBottomColor: theme.border,
   },
-  itemText: {
-    fontSize: 18,
-    color: theme.text,
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  avatarText: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold',
+  },
+  userName: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold',
+  },
+  userEmail: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textMuted,
+  },
+  updateSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  updateText: {
+    fontSize: FONT_SIZES.lg,
+    color: COLORS.textMuted,
   },
 });
 
