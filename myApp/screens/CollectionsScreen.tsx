@@ -98,7 +98,7 @@ export default function CollectionsScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="Bộ Sưu Tập" rightIcon="filter-outline" onRightPress={() => setShowSort(!showSort)} />
+        <Header title="Bộ Sưu Tập" showBack={true} rightIcon="filter-outline" onRightPress={() => setShowSort(!showSort)} />
 
         {/* Search */}
         <View style={styles.searchContainer}>

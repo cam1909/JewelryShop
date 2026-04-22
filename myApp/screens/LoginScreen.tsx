@@ -3,7 +3,7 @@ import { useAppContext } from '@/context/AppContext';
 import { auth } from '@/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,9 +27,16 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: '', message: '', type: 'success' as 'success' | 'error' | 'info' });
+  
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setAlertConfig({ visible: true, title, message, type });
+  };
+  const hideAlert = () => setAlertConfig(prev => ({ ...prev, visible: false }));
+
   const handleLogin = async () => {
     if (!email || !password) {
-      alert('Vui lòng nhập email và mật khẩu.');
+      showAlert('Thiếu thông tin', 'Vui lòng nhập đầy đủ email và mật khẩu.', 'error');
       return;
     }
     setLoading(true);
@@ -40,9 +48,26 @@ export default function LoginScreen() {
       login({ uid: user.uid, name: user.displayName || user.email!, email: user.email! });
       router.replace('/(tabs)/profile');
     } catch (error: any) {
-      alert(`Lỗi đăng nhập: ${error.message}`);
+      showAlert('Lỗi đăng nhập', error.message, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      showAlert('Thông báo', 'Vui lòng nhập Email của bạn vào ô bên trên để nhận liên kết lấy lại mật khẩu.', 'info');
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showAlert('Thành công', 'Đã gửi liên kết! Vui lòng kiểm tra hộp thư email của bạn để đặt lại mật khẩu.', 'success');
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found') {
+        showAlert('Lỗi', 'Không tìm thấy tài khoản với email này.', 'error');
+      } else {
+        showAlert('Lỗi', error.message, 'error');
+      }
     }
   };
 
@@ -110,7 +135,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Forgot password */}
-          <TouchableOpacity style={styles.forgotBtn}>
+          <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword}>
             <Text style={styles.forgotText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
 
@@ -122,24 +147,6 @@ export default function LoginScreen() {
             <Text style={styles.loginBtnText}>{loading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP'}</Text>
           </TouchableOpacity>
 
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>hoặc</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social login */}
-          <TouchableOpacity style={styles.socialBtn}>
-            <Ionicons name="logo-google" size={20} color={COLORS.white} />
-            <Text style={styles.socialBtnText}>Đăng nhập với Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialBtn}>
-            <Ionicons name="logo-facebook" size={20} color="#4267B2" />
-            <Text style={styles.socialBtnText}>Đăng nhập với Facebook</Text>
-          </TouchableOpacity>
-
           {/* Register link */}
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>
@@ -149,6 +156,29 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Custom Alert Modal */}
+      <Modal visible={alertConfig.visible} transparent animationType="fade" onRequestClose={hideAlert}>
+        <View style={styles.alertOverlay}>
+          <View style={styles.alertBox}>
+            <View style={styles.alertIconWrap}>
+              <Ionicons 
+                name={alertConfig.type === 'success' ? 'checkmark-circle' : alertConfig.type === 'error' ? 'close-circle' : 'information-circle'} 
+                size={56} 
+                color={alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : COLORS.gold} 
+              />
+            </View>
+            <Text style={styles.alertTitle}>{alertConfig.title}</Text>
+            <Text style={styles.alertMessage} textAlign="center">{alertConfig.message}</Text>
+            <TouchableOpacity 
+              style={[styles.alertBtn, {backgroundColor: alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : COLORS.gold}]} 
+              onPress={hideAlert}
+            >
+              <Text style={styles.alertBtnText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -191,21 +221,17 @@ const styles = StyleSheet.create({
   },
   loginBtnText: { color: COLORS.black, fontSize: FONT_SIZES.md, fontWeight: '700', letterSpacing: 1.5 },
 
-  // Divider
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.lg, marginBottom: SPACING.xxl },
-  dividerLine: { flex: 1, height: 0.5, backgroundColor: COLORS.border },
-  dividerText: { color: COLORS.textMuted, fontSize: FONT_SIZES.sm },
-
-  // Social
-  socialBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.md,
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: BORDER_RADIUS.md,
-    paddingVertical: SPACING.md, marginBottom: SPACING.md,
-  },
-  socialBtnText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '400' },
-
   // Register
   registerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: SPACING.xxl },
   registerText: { color: COLORS.textMuted, fontSize: FONT_SIZES.md },
   registerLink: { color: COLORS.gold, fontSize: FONT_SIZES.md, fontWeight: '600' },
+
+  // Custom Alert Styles
+  alertOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.xl },
+  alertBox: { backgroundColor: '#1A1A1A', width: '100%', borderRadius: BORDER_RADIUS.lg, padding: SPACING.xl, alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+  alertIconWrap: { marginBottom: SPACING.md },
+  alertTitle: { color: COLORS.white, fontSize: FONT_SIZES.xl, fontWeight: 'bold', marginBottom: SPACING.sm, textAlign: 'center' },
+  alertMessage: { color: COLORS.textSecondary, fontSize: FONT_SIZES.md, textAlign: 'center', marginBottom: SPACING.xl, lineHeight: 22 },
+  alertBtn: { width: '100%', paddingVertical: SPACING.md, borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
+  alertBtnText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: 'bold' },
 });

@@ -1,0 +1,17 @@
+{
+  "name": "jewelry-shop-backend",
+  "version": "1.0.0",
+  "description": "Backend API cho ứng dụng Jewelry Shop",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@payos/node": "^1.0.7",
+    "cors": "^2.8.6",
+    "express": "^4.21.0",
+    "mysql2": "^3.22.2",
+    "sequelize": "^6.37.8"
+  }
+}

@@ -10,6 +10,8 @@ import {
   Animated,
   Dimensions,
   FlatList,
+  Image,
+  Linking,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -53,24 +55,28 @@ function HeroBanner() {
   return (
     <View style={styles.heroBanner}>
       <View style={styles.heroImagePlaceholder}>
+        <Image
+          source={require('@/assets/images/products/bg.png')}
+          style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
+        />
         <View style={styles.heroGradientOverlay} />
-        <Ionicons name="diamond" size={60} color={COLORS.goldMuted} style={{ opacity: 0.3 }} />
       </View>
       <Animated.View
         style={[styles.heroContent, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-        <Text style={styles.heroSubtitle}>BỘ SƯU TẬP MỚI 2025</Text>
-        <Text style={styles.heroTitleLine1}>Tinh Hoa</Text>
-        <Text style={styles.heroTitleLine2}>Trang Sức Việt</Text>
-        <Text style={styles.heroDesc}>
-          Nơi hội tụ những kiệt tác từ bàn tay{'\n'}nghệ nhân lành nghề —{'\n'}Sang trọng, tinh tế, vĩnh cửu.
-        </Text>
-        <View style={styles.heroBtnRow}>
-          <TouchableOpacity style={styles.heroBtnPrimary} onPress={() => router.push('/(tabs)/collections' as any)}>
-            <Text style={styles.heroBtnPrimaryText}>KHÁM PHÁ NGAY</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.heroBtnSecondary} onPress={() => router.push('/(tabs)/collections' as any)}>
-            
-          </TouchableOpacity>
+        <View>
+          <Text style={styles.heroSubtitle}>BỘ SƯU TẬP MỚI 2025</Text>
+          <Text style={styles.heroTitleLine1}>Tinh Hoa</Text>
+          <Text style={styles.heroTitleLine2}>Trang Sức Việt</Text>
+        </View>
+        <View style={styles.heroBottomWrap}>
+          <Text style={styles.heroDesc}>
+            Tuyệt tác trang sức từ nghệ nhân lành nghề{'\n'}— Sang trọng, tinh tế & vĩnh cửu —
+          </Text>
+          <View style={styles.heroBtnRow}>
+            <TouchableOpacity style={styles.heroBtnPrimary} onPress={() => router.push('/(tabs)/collections' as any)}>
+              <Text style={styles.heroBtnPrimaryText}>KHÁM PHÁ NGAY</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Animated.View>
     </View>
@@ -86,7 +92,7 @@ function CategorySection() {
         title="Bộ Sưu Tập"
         onPress={() => router.push('/(tabs)/collections' as any)}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
+      <View style={styles.categoryGrid}>
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
             key={cat.id}
@@ -99,7 +105,7 @@ function CategorySection() {
             <Ionicons name="arrow-forward" size={14} color={COLORS.textMuted} />
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -171,6 +177,47 @@ function StorySection() {
   );
 }
 
+function HomeFooter() {
+  return (
+    <View style={styles.contactSection}>
+      <Text style={styles.sectionSub}>LIÊN HỆ</Text>
+      <Text style={styles.sectionTitle}>Ghé Thăm Chúng Tôi</Text>
+      <View style={styles.sectionDividerWrap}>
+        <View style={styles.sectionDivider} />
+      </View>
+
+      {[
+        { icon: 'location-outline' as const, label: '235 Hoàng Quốc Việt, Cầu Giấy, Hà Nội' },
+        { icon: 'call-outline' as const, label: '0962 977 820' },
+        { icon: 'mail-outline' as const, label: 'contact@velmora.vn' },
+        { icon: 'time-outline' as const, label: '09:00 - 21:00, T2 - CN' },
+      ].map((c, i) => (
+        <View key={i} style={styles.contactItem}>
+          <View style={styles.contactIcon}>
+            <Ionicons name={c.icon} size={20} color={COLORS.gold} />
+          </View>
+          <Text style={styles.contactText}>{c.label}</Text>
+        </View>
+      ))}
+
+      {/* Social */}
+      <View style={styles.socialRow}>
+        {[
+          { icon: 'logo-facebook', link: 'https://www.facebook.com/profile.php?id=61584859067174' },
+          { icon: 'logo-instagram', link: 'https://www.instagram.com/cmcm.1909/?hl=vi' },
+          { icon: 'logo-tiktok', link: 'https://zalo.me/0962977820' },
+        ].map((social, i) => (
+          <TouchableOpacity key={i} style={styles.socialBtn} onPress={() => Linking.openURL(social.link)}>
+            <Ionicons name={social.icon as any} size={22} color={COLORS.gold} />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.copyright}>© 2025 VELMORA Jewelry House. All rights reserved.</Text>
+    </View>
+  );
+}
+
 // ========== MAIN SCREEN ==========
 export default function HomeScreen() {
   const router = useRouter();
@@ -186,6 +233,7 @@ export default function HomeScreen() {
         <BenefitsSection />
         <FeaturedProducts />
         <StorySection />
+        <HomeFooter />
         <View style={{ height: 30 }} />
       </ScrollView>
     </View>
@@ -206,25 +254,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  heroGradientOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
+  heroGradientOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)' },
   heroContent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    ...StyleSheet.absoluteFillObject,
     padding: SPACING.xxl,
-    paddingBottom: SPACING.xxxl,
+    paddingTop: SPACING.xl,
+    justifyContent: 'space-between',
   },
   heroSubtitle: {
     color: COLORS.gold,
     fontSize: FONT_SIZES.sm,
-    letterSpacing: 3,
-    fontWeight: '500',
+    letterSpacing: 4,
+    fontWeight: '600',
     marginBottom: SPACING.md,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
-  heroTitleLine1: { color: COLORS.white, fontSize: FONT_SIZES.hero, fontWeight: '200', fontStyle: 'italic', lineHeight: 44 },
-  heroTitleLine2: { color: COLORS.gold, fontSize: FONT_SIZES.hero, fontWeight: '200', fontStyle: 'italic', lineHeight: 44, marginBottom: SPACING.lg },
-  heroDesc: { color: COLORS.textSecondary, fontSize: FONT_SIZES.md, fontStyle: 'italic', lineHeight: 22, marginBottom: SPACING.xl },
+  heroTitleLine1: {
+    fontFamily: 'Allura_400Regular',
+    color: COLORS.white, fontSize: 64, lineHeight: 70,
+    textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 12
+  },
+  heroTitleLine2: {
+    fontFamily: 'Allura_400Regular',
+    color: COLORS.gold, fontSize: 52, lineHeight: 60,
+    textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 12
+  },
+  heroBottomWrap: {
+    paddingBottom: SPACING.xl,
+  },
+  heroDesc: {
+    color: COLORS.white, fontSize: 13, fontStyle: 'italic', lineHeight: 22, marginBottom: SPACING.xl,
+    textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 5
+  },
   heroBtnRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.lg },
   heroBtnPrimary: { backgroundColor: COLORS.white, paddingHorizontal: SPACING.xxl, paddingVertical: SPACING.md, borderRadius: BORDER_RADIUS.sm },
   heroBtnPrimaryText: { color: COLORS.black, fontSize: FONT_SIZES.sm, fontWeight: '700', letterSpacing: 1.5 },
@@ -235,13 +298,19 @@ const styles = StyleSheet.create({
   section: { paddingVertical: SPACING.xxxl },
 
   // Categories
-  categoryList: { paddingHorizontal: SPACING.lg, gap: SPACING.md },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+  },
   categoryCard: {
     backgroundColor: COLORS.bgCard,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl,
     alignItems: 'center',
-    width: 110,
+    width: '48%',
+    marginBottom: SPACING.md,
     gap: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -316,5 +385,40 @@ const styles = StyleSheet.create({
   storyTitle: { color: COLORS.white, fontSize: FONT_SIZES.xxxl, fontWeight: '200', fontStyle: 'italic', textAlign: 'center', lineHeight: 40, marginVertical: SPACING.xl },
   storyDesc: { color: COLORS.textSecondary, fontSize: FONT_SIZES.md, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xxl, fontStyle: 'italic' },
   storyBtn: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.gold, paddingBottom: SPACING.xs },
-  storyBtnText: { color: COLORS.gold, fontSize: FONT_SIZES.sm, fontWeight: '500', letterSpacing: 1 },
+  storyBtnText: { color: COLORS.gold, fontSize: FONT_SIZES.sm, fontWeight: '700', letterSpacing: 1.5 },
+
+  // Shared Sub & Title
+  sectionSub: { color: COLORS.gold, fontSize: FONT_SIZES.xs, letterSpacing: 3, fontWeight: '500', textAlign: 'center', marginBottom: SPACING.sm },
+  sectionTitle: { color: COLORS.white, fontSize: FONT_SIZES.xxl, fontWeight: '300', fontStyle: 'italic', textAlign: 'center' },
+  sectionDividerWrap: { alignItems: 'center', marginVertical: SPACING.lg },
+  sectionDivider: { width: 40, height: 2, backgroundColor: COLORS.gold, borderRadius: 1 },
+
+  // Footer / Contact
+  contactSection: {
+    paddingVertical: SPACING.xxxl, paddingHorizontal: SPACING.xl,
+    backgroundColor: COLORS.bgDark, borderTopWidth: 0.5, borderColor: COLORS.border,
+    marginTop: SPACING.xxl,
+  },
+  contactItem: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.lg,
+    paddingVertical: SPACING.md,
+  },
+  contactIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(201, 169, 110, 0.12)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  contactText: { color: COLORS.textSecondary, fontSize: FONT_SIZES.md },
+  socialRow: {
+    flexDirection: 'row', justifyContent: 'center', gap: SPACING.lg, marginTop: SPACING.xxl,
+  },
+  socialBtn: {
+    width: 48, height: 48, borderRadius: 24,
+    borderWidth: 1, borderColor: COLORS.border,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  copyright: {
+    color: COLORS.textMuted, fontSize: FONT_SIZES.xs, textAlign: 'center',
+    marginTop: SPACING.xl, letterSpacing: 0.5,
+  },
 });

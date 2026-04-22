@@ -67,7 +67,7 @@ export default function FaqScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="Câu Hỏi Thường Gặp" />
+        <Header title="Câu Hỏi Thường Gặp" showBack={true} />
       </SafeAreaView>
 
 

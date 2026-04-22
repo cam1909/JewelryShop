@@ -8,8 +8,10 @@ import {
 } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-native-reanimated';
+import { useFonts, PlayfairDisplay_700Bold_Italic } from '@expo-google-fonts/playfair-display';
+import { Allura_400Regular } from '@expo-google-fonts/allura';
 
 // Custom light theme
 const VelmoraLightTheme = {
@@ -93,6 +95,13 @@ function AppContent() {
           name="modal"
           options={{ presentation: 'modal', title: 'Chi Tiết' }}
         />
+        <Stack.Screen name="checkout" options={{ headerShown: false }} />
+        <Stack.Screen name="orders" options={{ headerShown: false }} />
+        <Stack.Screen name="returns" options={{ headerShown: false }} />
+        <Stack.Screen name="vouchers" options={{ headerShown: false }} />
+        <Stack.Screen name="membership" options={{ headerShown: false }} />
+        <Stack.Screen name="addresses" options={{ headerShown: false }} />
+        <Stack.Screen name="payment" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
     </ThemeProvider>
@@ -101,8 +110,12 @@ function AppContent() {
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
+  let [fontsLoaded] = useFonts({
+    PlayfairDisplay_700Bold_Italic,
+    Allura_400Regular,
+  });
 
-  if (showSplash) {
+  if (showSplash || !fontsLoaded) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 

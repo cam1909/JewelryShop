@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Dimensions,
+    Image,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -40,7 +41,7 @@ export default function WishlistScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="Yêu Thích" subtitle={`${wishlistedProducts.length} sản phẩm`} />
+        <Header title="Yêu Thích" showBack={true} subtitle={`${wishlistedProducts.length} sản phẩm`} />
       </SafeAreaView>
 
       {wishlistedProducts.length === 0 ? (
@@ -62,9 +63,13 @@ export default function WishlistScreen() {
             {wishlistedProducts.map((item) => (
               <View key={item.id} style={styles.card}>
                 <View style={styles.cardImageWrap}>
-                  <View style={styles.cardImagePlaceholder}>
-                    <Ionicons name="diamond-outline" size={36} color={COLORS.borderLight} />
-                  </View>
+                  {item.image ? (
+                    <Image source={item.image} style={styles.productImage} />
+                  ) : (
+                    <View style={styles.cardImagePlaceholder}>
+                      <Ionicons name="diamond-outline" size={36} color={COLORS.borderLight} />
+                    </View>
+                  )}
                   <TouchableOpacity style={styles.removeBtn} onPress={() => toggleWishlist(item.id)}>
                     <Ionicons name="close" size={16} color={COLORS.white} />
                   </TouchableOpacity>
@@ -142,6 +147,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5, borderColor: COLORS.border,
   },
   cardImageWrap: { height: 180, position: 'relative' },
+  productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   cardImagePlaceholder: { flex: 1, backgroundColor: COLORS.bgCardLight, justifyContent: 'center', alignItems: 'center' },
   removeBtn: {
     position: 'absolute', top: SPACING.sm, right: SPACING.sm,

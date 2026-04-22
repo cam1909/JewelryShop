@@ -8,12 +8,13 @@ import {
   StatusBar,
   ScrollView,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { MOCK_PRODUCTS, formatPrice } from '@/context/AppContext';
+import { useAppContext, formatPrice } from '@/context/AppContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -24,8 +25,10 @@ export default function SearchScreen() {
   const [searchText, setSearchText] = useState('');
   const [searching, setSearching] = useState(false);
 
+  const { products } = useAppContext();
+
   const results = searchText.length > 0
-    ? MOCK_PRODUCTS.filter((p) =>
+    ? products.filter((p: any) =>
         p.name.toLowerCase().includes(searchText.toLowerCase()) ||
         p.category.toLowerCase().includes(searchText.toLowerCase())
       )
@@ -95,13 +98,17 @@ export default function SearchScreen() {
         ) : (
           <>
             <Text style={styles.resultCount}>{results.length} kết quả cho "{searchText}"</Text>
-            {results.map((product) => (
+            {results.map((product: any) => (
               <TouchableOpacity
                 key={product.id}
                 style={styles.resultCard}
                 onPress={() => router.push(`/product/${product.id}` as any)}>
                 <View style={styles.resultImage}>
-                  <Ionicons name="diamond-outline" size={28} color={COLORS.borderLight} />
+                  {product.image ? (
+                    <Image source={product.image} style={{ width: '100%', height: '100%', borderRadius: 8 }} resizeMode="cover" />
+                  ) : (
+                    <Ionicons name="diamond-outline" size={28} color={COLORS.borderLight} />
+                  )}
                 </View>
                 <View style={styles.resultInfo}>
                   <Text style={styles.resultCategory}>{product.category}</Text>

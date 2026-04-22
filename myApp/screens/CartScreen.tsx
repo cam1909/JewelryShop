@@ -34,7 +34,10 @@ export default function CartScreen() {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <View>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: SPACING.md }}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <View style={{flex: 1}}>
             <Text style={styles.headerTitle}>Giỏ Hàng</Text>
             <Text style={styles.headerSubtitle}>{cart.length} sản phẩm</Text>
           </View>
@@ -96,16 +99,7 @@ export default function CartScreen() {
               </View>
             ))}
 
-            {/* Promo */}
-            <View style={styles.promoSection}>
-              <View style={styles.promoInput}>
-                <Ionicons name="ticket-outline" size={18} color={COLORS.gold} />
-                <Text style={styles.promoPlaceholder}>Nhập mã giảm giá</Text>
-              </View>
-              <TouchableOpacity style={styles.promoBtn}>
-                <Text style={styles.promoBtnText}>ÁP DỤNG</Text>
-              </TouchableOpacity>
-            </View>
+
 
             {/* Summary */}
             <View style={styles.summarySection}>
@@ -142,7 +136,7 @@ export default function CartScreen() {
               <Text style={styles.checkoutTotal}>{formatPrice(total)}</Text>
             </View>
             <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
-              <Text style={styles.checkoutBtnText}>THANH TOÁN</Text>
+              <Text style={styles.checkoutBtnText}>MUA NGAY</Text>
               <Ionicons name="arrow-forward" size={18} color={COLORS.black} />
             </TouchableOpacity>
           </View>

@@ -1,16 +1,19 @@
 import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { Product, formatPrice, useAppContext } from '@/context/AppContext';
+import { getProductReviews, addProductReview } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Image,
   Modal,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -70,7 +73,11 @@ function AddToCartSheet({
         {/* Product preview */}
         <View style={sheetStyles.productPreview}>
           <View style={sheetStyles.previewImage}>
-            <Ionicons name="diamond-outline" size={32} color={COLORS.borderLight} />
+            {product.image ? (
+              <Image source={product.image} style={{ width: 72, height: 72, borderRadius: 8 }} resizeMode="cover" />
+            ) : (
+              <Ionicons name="diamond-outline" size={32} color={COLORS.borderLight} />
+            )}
           </View>
           <View style={sheetStyles.previewInfo}>
             <Text style={sheetStyles.previewName} numberOfLines={2}>{product.name}</Text>
@@ -143,19 +150,104 @@ function AddToCartSheet({
 }
 
 // ========== MAIN SCREEN ==========
+const IMAGE_HEIGHT = 420;
+
 export default function ProductDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { products, addToCart, isInWishlist, toggleWishlist, isAuthenticated } = useAppContext();
+  const { products, addToCart, isInWishlist, toggleWishlist, isAuthenticated, user } = useAppContext();
 
   const product = products.find((p) => p.id === id);
 
   const liked = product ? isInWishlist(product.id) : false;
   const [showSheet, setShowSheet] = useState(false);
   const addAnim = useRef(new Animated.Value(1)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Fade-in animations
+  const fadeAnim1 = useRef(new Animated.Value(0)).current;
+  const fadeAnim2 = useRef(new Animated.Value(0)).current;
+  const fadeAnim3 = useRef(new Animated.Value(0)).current;
+  const slideAnim1 = useRef(new Animated.Value(30)).current;
+  const slideAnim2 = useRef(new Animated.Value(30)).current;
+  const slideAnim3 = useRef(new Animated.Value(30)).current;
+
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState('');
+
+  const loadReviews = async () => {
+    if (!product) return;
+    setLoadingReviews(true);
+    const data = await getProductReviews(product.id);
+    if (data.success) {
+      setReviews(data.data || []);
+    }
+    setLoadingReviews(false);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!isAuthenticated || !user) {
+      router.push('/login');
+      return;
+    }
+    if (!newComment.trim()) return;
+
+    const userName = (user as any).displayName || user.email?.split('@')[0] || 'Khách';
+    const res = await addProductReview(product!.id, user.uid, userName, newRating, newComment);
+    if (res.success) {
+      setShowReviewModal(false);
+      setNewComment('');
+      setNewRating(5);
+      loadReviews(); 
+    } else {
+      alert('Đã có lỗi xảy ra khi gửi đánh giá');
+    }
+  };
+
+  useEffect(() => {
+    // Staggered fade-in animations
+    Animated.stagger(200, [
+      Animated.parallel([
+        Animated.timing(fadeAnim1, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(slideAnim1, { toValue: 0, duration: 600, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnim2, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(slideAnim2, { toValue: 0, duration: 600, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnim3, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(slideAnim3, { toValue: 0, duration: 600, useNativeDriver: true }),
+      ]),
+    ]).start();
+
+    loadReviews();
+  }, [product]);
+
+  // Parallax: ảnh di chuyển chậm hơn khi cuộn
+  const imageTranslate = scrollY.interpolate({
+    inputRange: [0, IMAGE_HEIGHT],
+    outputRange: [0, IMAGE_HEIGHT * 0.4],
+    extrapolate: 'clamp',
+  });
+  const imageScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.3, 1],
+    extrapolate: 'clamp',
+  });
+
+  // Header background opacity: trong suốt → mờ đục khi cuộn
+  const headerBgOpacity = scrollY.interpolate({
+    inputRange: [0, IMAGE_HEIGHT - 100],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   if (!product) {
-    // Optional: Render a loading or not found state
     return (
       <View style={styles.container}>
         <Text style={{ color: 'white', textAlign: 'center', marginTop: 50 }}>Sản phẩm không tồn tại.</Text>
@@ -184,7 +276,6 @@ export default function ProductDetailScreen() {
       router.push('/login');
       return;
     }
-    // Add to cart and navigate to checkout
     addToCart(product, 1, 'default');
     router.push('/checkout');
   };
@@ -192,7 +283,6 @@ export default function ProductDetailScreen() {
   const handleConfirmAdd = (size: string | null, qty: number) => {
     addToCart(product, qty, size || 'default');
     setShowSheet(false);
-    // Animation bounce feedback
     Animated.sequence([
       Animated.timing(addAnim, { toValue: 1.15, duration: 150, useNativeDriver: true }),
       Animated.timing(addAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
@@ -203,15 +293,18 @@ export default function ProductDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Header */}
+      {/* Animated Header - trong suốt → mờ đục */}
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
+          <Animated.View style={[styles.headerBg, { opacity: headerBgOpacity }]} />
           <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={22} color={COLORS.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Chi Tiết</Text>
+          <Animated.Text style={[styles.headerTitle, { opacity: headerBgOpacity }]}>
+            {product.name}
+          </Animated.Text>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.headerBtn} onPress={handleToggleWishlist}>
               <Ionicons name={liked ? 'heart' : 'heart-outline'} size={22} color={liked ? COLORS.red : COLORS.white} />
@@ -223,12 +316,35 @@ export default function ProductDetailScreen() {
         </View>
       </SafeAreaView>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Product Image */}
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        {/* Parallax Product Image */}
         <View style={styles.imageSection}>
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="diamond-outline" size={80} color={COLORS.borderLight} />
-          </View>
+          <Animated.View style={[
+            styles.imageWrapper,
+            { transform: [{ translateY: imageTranslate }, { scale: imageScale }] }
+          ]}>
+            {product.image ? (
+              <Image source={product.image} style={styles.productImage} resizeMode="cover" />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="diamond-outline" size={80} color={COLORS.borderLight} />
+              </View>
+            )}
+          </Animated.View>
+
+          {/* Gradient overlay: ảnh chuyển tiếp mượt sang nền tối */}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.3)', COLORS.bgDark]}
+            style={styles.imageGradient}
+          />
+
           {product.badge && (
             <View style={[
               styles.badge,
@@ -238,15 +354,10 @@ export default function ProductDetailScreen() {
               <Text style={styles.badgeText}>{product.badge}</Text>
             </View>
           )}
-          <View style={styles.dotsRow}>
-            {[0, 1, 2, 3].map((i) => (
-              <View key={i} style={[styles.dot, i === 0 && styles.dotActive]} />
-            ))}
-          </View>
         </View>
 
-        {/* Product Info */}
-        <View style={styles.infoSection}>
+        {/* Product Info - Fade in animation */}
+        <Animated.View style={[styles.infoSection, { opacity: fadeAnim1, transform: [{ translateY: slideAnim1 }] }]}>
           <Text style={styles.category}>{product.category}</Text>
           <Text style={styles.productName}>{product.name}</Text>
 
@@ -269,24 +380,22 @@ export default function ProductDetailScreen() {
               </View>
             )}
           </View>
-        </View>
+        </Animated.View>
 
         <View style={styles.divider} />
 
-        {/* Description */}
-        <View style={styles.descSection}>
+        {/* Description - Fade in animation */}
+        <Animated.View style={[styles.descSection, { opacity: fadeAnim2, transform: [{ translateY: slideAnim2 }] }]}>
           <Text style={styles.sectionLabel}>Mô tả sản phẩm</Text>
           <Text style={styles.descText}>
-            Sản phẩm được chế tác thủ công bởi các nghệ nhân lành nghề với hơn 20 năm kinh nghiệm.
-            Chất liệu vàng 18K cao cấp, đảm bảo chất lượng và độ bền vượt trội.
-            Thiết kế sang trọng, tinh tế phù hợp cho mọi dịp đặc biệt.
+            {product.description || 'Sản phẩm được chế tác thủ công bởi các nghệ nhân lành nghề với hơn 20 năm kinh nghiệm. Chất liệu vàng 18K cao cấp, đảm bảo chất lượng và độ bền vượt trội. Thiết kế sang trọng, tinh tế phù hợp cho mọi dịp đặc biệt.'}
           </Text>
-        </View>
+        </Animated.View>
 
         <View style={styles.divider} />
 
-        {/* Benefits */}
-        <View style={styles.benefitsRow}>
+        {/* Benefits - Fade in animation */}
+        <Animated.View style={[styles.benefitsRow, { opacity: fadeAnim3, transform: [{ translateY: slideAnim3 }] }]}>
           {[
             { icon: 'shield-checkmark-outline' as const, text: 'Bảo hành\nvĩnh viễn' },
             { icon: 'car-outline' as const, text: 'Giao hàng\nmiễn phí' },
@@ -300,6 +409,42 @@ export default function ProductDetailScreen() {
               <Text style={styles.benefitText}>{b.text}</Text>
             </View>
           ))}
+        </Animated.View>
+
+        <View style={styles.divider} />
+
+        {/* Real Reviews Section */}
+        <View style={styles.reviewsSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>Đánh giá thực tế ({reviews.length})</Text>
+            <TouchableOpacity onPress={() => setShowReviewModal(true)}>
+              <Text style={styles.writeReviewText}>Viết đánh giá</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {loadingReviews ? (
+            <Text style={{ color: COLORS.textMuted, paddingHorizontal: SPACING.xl }}>Đang tải đánh giá...</Text>
+          ) : reviews.length === 0 ? (
+            <Text style={{ color: COLORS.textMuted, paddingHorizontal: SPACING.xl }}>Chưa có đánh giá nào. Hãy là người đầu tiên!</Text>
+          ) : (
+            reviews.map((r, i) => (
+              <View key={i} style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.reviewAvatar}>
+                    <Text style={styles.reviewAvatarText}>{r.userName.charAt(0).toUpperCase()}</Text>
+                  </View>
+                  <View style={styles.reviewUserInfo}>
+                    <Text style={styles.reviewUserName}>{r.userName}</Text>
+                    <View style={styles.reviewStars}>{renderStars(r.rating)}</View>
+                  </View>
+                  <Text style={styles.reviewDate}>
+                    {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                  </Text>
+                </View>
+                <Text style={styles.reviewComment}>{r.comment}</Text>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={styles.divider} />
@@ -308,25 +453,29 @@ export default function ProductDetailScreen() {
         {related.length > 0 && (
           <View style={styles.relatedSection}>
             <Text style={styles.sectionLabel}>Sản phẩm liên quan</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedList}>
+            <Animated.ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedList}>
               {related.map((p) => (
                 <TouchableOpacity
                   key={p.id}
                   style={styles.relatedCard}
                   onPress={() => router.push(`/product/${p.id}` as any)}>
                   <View style={styles.relatedImage}>
-                    <Ionicons name="diamond-outline" size={28} color={COLORS.borderLight} />
+                    {p.image ? (
+                      <Image source={p.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                    ) : (
+                      <Ionicons name="diamond-outline" size={28} color={COLORS.borderLight} />
+                    )}
                   </View>
                   <Text style={styles.relatedName} numberOfLines={2}>{p.name}</Text>
                   <Text style={styles.relatedPrice}>{formatPrice(p.price)}</Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </Animated.ScrollView>
           </View>
         )}
 
         <View style={{ height: 100 }} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Bottom action bar */}
       <View style={styles.bottomBar}>
@@ -359,6 +508,45 @@ export default function ProductDetailScreen() {
         product={product}
         onConfirm={handleConfirmAdd}
       />
+
+      {/* Full Screen Review Modal */}
+      <Modal visible={showReviewModal} transparent animationType="slide" onRequestClose={() => setShowReviewModal(false)}>
+        <View style={sheetStyles.overlay}>
+          <View style={[sheetStyles.container, { marginTop: 'auto', padding: SPACING.xl }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.xl }}>
+              <Text style={sheetStyles.sectionLabel}>Viết Đánh Giá</Text>
+              <TouchableOpacity onPress={() => setShowReviewModal(false)}>
+                <Ionicons name="close" size={24} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={{ color: COLORS.white, marginBottom: SPACING.sm }}>Đánh giá của bạn:</Text>
+            <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.xl }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => setNewRating(star)}>
+                  <Ionicons name={star <= newRating ? 'star' : 'star-outline'} size={32} color={COLORS.gold} />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={{ color: COLORS.white, marginBottom: SPACING.sm }}>Chi tiết đánh giá:</Text>
+            <View style={{ backgroundColor: COLORS.bgDark, borderRadius: BORDER_RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: SPACING.md, marginBottom: SPACING.xl }}>
+              <TextInput 
+                style={{ color: COLORS.white, minHeight: 100, textAlignVertical: 'top' }}
+                placeholder="Ví dụ: Sản phẩm rất đẹp và sang trọng..."
+                placeholderTextColor={COLORS.textMuted}
+                multiline
+                value={newComment}
+                onChangeText={setNewComment}
+              />
+            </View>
+
+            <TouchableOpacity style={sheetStyles.confirmBtn} onPress={handleSubmitReview}>
+              <Text style={[sheetStyles.confirmBtnText, { textAlign: 'center', flex: 1 }]}>GỬI ĐÁNH GIÁ</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -448,20 +636,33 @@ const sheetStyles = StyleSheet.create({
 // ========== MAIN STYLES ==========
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bgDark },
-  safeArea: { backgroundColor: COLORS.bgDark },
+  safeArea: { backgroundColor: 'transparent', position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
   },
-  headerBtn: { padding: SPACING.xs },
-  headerTitle: { color: COLORS.white, fontSize: FONT_SIZES.lg, fontWeight: '500' },
-  headerRight: { flexDirection: 'row', gap: SPACING.md },
+  headerBg: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: COLORS.bgDark,
+  },
+  headerBtn: { padding: SPACING.xs, zIndex: 1 },
+  headerTitle: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '500', flex: 1, textAlign: 'center', zIndex: 1 },
+  headerRight: { flexDirection: 'row', gap: SPACING.md, zIndex: 1 },
 
-  imageSection: { height: 380, position: 'relative' },
+  imageSection: { height: IMAGE_HEIGHT, position: 'relative', overflow: 'hidden' },
+  imageWrapper: {
+    width: '100%', height: '100%',
+  },
+  productImage: {
+    width: '100%', height: '100%',
+  },
   imagePlaceholder: {
     flex: 1, backgroundColor: COLORS.bgCardLight,
     justifyContent: 'center', alignItems: 'center',
+  },
+  imageGradient: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, height: 150,
   },
   badge: {
     position: 'absolute', top: SPACING.lg, left: SPACING.lg,
@@ -509,6 +710,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(201, 169, 110, 0.12)', justifyContent: 'center', alignItems: 'center',
   },
   benefitText: { color: COLORS.textMuted, fontSize: FONT_SIZES.xs, textAlign: 'center', lineHeight: 16 },
+
+  reviewsSection: { paddingVertical: SPACING.xxl },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg },
+  writeReviewText: { color: COLORS.gold, fontSize: FONT_SIZES.sm, fontWeight: '500' },
+  reviewCard: { paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg },
+  reviewHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm },
+  reviewAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.bgCardLight, justifyContent: 'center', alignItems: 'center', marginRight: SPACING.md },
+  reviewAvatarText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '700' },
+  reviewUserInfo: { flex: 1 },
+  reviewUserName: { color: COLORS.white, fontSize: FONT_SIZES.sm, fontWeight: '500', marginBottom: 2 },
+  reviewStars: { flexDirection: 'row' },
+  reviewDate: { color: COLORS.textMuted, fontSize: FONT_SIZES.xs },
+  reviewComment: { color: COLORS.textSecondary, fontSize: FONT_SIZES.sm, lineHeight: 22 },
 
   relatedSection: { padding: SPACING.xl },
   relatedList: { gap: SPACING.md },

@@ -18,18 +18,17 @@ const MENU_SECTIONS = [
   {
     title: 'Đơn Hàng',
     items: [
-      { id: '1', icon: 'receipt-outline' as const, label: 'Đơn hàng của tôi', badge: '2', route: null },
-      { id: '2', icon: 'time-outline' as const, label: 'Lịch sử mua hàng', badge: null, route: null },
-      { id: '3', icon: 'refresh-outline' as const, label: 'Đổi trả & Hoàn tiền', badge: null, route: null },
+      { id: '1', icon: 'receipt-outline' as const, label: 'Đơn hàng của tôi', badge: null, route: '/orders' },
+      { id: '2', icon: 'time-outline' as const, label: 'Lịch sử mua hàng', badge: null, route: '/orders' },
+      { id: '3', icon: 'refresh-outline' as const, label: 'Đổi trả & Hoàn tiền', badge: null, route: '/returns' },
     ],
   },
   {
     title: 'Tài Khoản',
     items: [
-      { id: '4', icon: 'location-outline' as const, label: 'Địa chỉ giao hàng', badge: null, route: null },
-      { id: '5', icon: 'card-outline' as const, label: 'Phương thức thanh toán', badge: null, route: null },
-      { id: '6', icon: 'gift-outline' as const, label: 'Ưu đãi & Voucher', badge: '5', route: null },
-      { id: '7', icon: 'star-outline' as const, label: 'Hạng thành viên', badge: 'VIP', route: null },
+      { id: '4', icon: 'location-outline' as const, label: 'Địa chỉ giao hàng', badge: null, route: '/addresses' },
+      { id: '6', icon: 'gift-outline' as const, label: 'Ưu đãi & Voucher', badge: null, route: '/vouchers' },
+      { id: '7', icon: 'star-outline' as const, label: 'Hạng thành viên', badge: 'VIP', route: '/membership' },
     ],
   },
   {
@@ -45,7 +44,7 @@ const MENU_SECTIONS = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { isAuthenticated, user, logout, wishlist, cart } = useAppContext();
+  const { isAuthenticated, user, logout, wishlist, cart, orderCount, voucherCount } = useAppContext();
 
   const handleLogout = () => {
     logout();
@@ -63,7 +62,7 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="Tài Khoản" />
+        <Header title="Tài Khoản" showBack={true} />
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -109,7 +108,7 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{isAuthenticated ? '0' : '0'}</Text>
+            <Text style={styles.statNumber}>{isAuthenticated ? orderCount : '0'}</Text>
             <Text style={styles.statLabel}>Đơn hàng</Text>
           </View>
           <View style={styles.statDivider} />
@@ -119,7 +118,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{isAuthenticated ? '0' : '0'}</Text>
+            <Text style={styles.statNumber}>{isAuthenticated ? voucherCount : '0'}</Text>
             <Text style={styles.statLabel}>Voucher</Text>
           </View>
           <View style={styles.statDivider} />

@@ -2,11 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 interface HeaderProps {
   showMenu?: boolean;
   showSearch?: boolean;
   showNotification?: boolean;
+  showBack?: boolean;
   title?: string;
   subtitle?: string;
   rightIcon?: keyof typeof Ionicons.glyphMap;
@@ -18,17 +21,21 @@ export default function Header({
   showMenu = false,
   showSearch = false,
   showNotification = false,
+  showBack = false,
   title,
   subtitle,
   rightIcon,
   onRightPress,
   onSearchPress,
 }: HeaderProps) {
+  const router = useRouter();
+  const navigation = useNavigation();
+
   // Brand header (Home)
   if (showMenu) {
     return (
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
           <Ionicons name="menu-outline" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View style={styles.brandCenter}>
@@ -54,7 +61,12 @@ export default function Header({
   // Simple title header (other screens)
   return (
     <View style={styles.header}>
-      <View>
+      {showBack && (
+        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: SPACING.md }}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+      )}
+      <View style={{ flex: 1 }}>
         <Text style={styles.headerTitle}>{title}</Text>
         {subtitle && <Text style={styles.headerSubtitle}>{subtitle}</Text>}
       </View>
