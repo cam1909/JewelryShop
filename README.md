@@ -5,6 +5,14 @@ Chào mừng bạn đến với **VELMORA Jewelry House**, ứng dụng mua sắ
 ![Velmora Preview](https://img.shields.io/badge/React%20Native-Expo-blue?logo=react) ![NodeJS](https://img.shields.io/badge/Node.js-Express-success?logo=nodedotjs) ![MySQL](https://img.shields.io/badge/MySQL-Sequelize-orange?logo=mysql) ![Firebase](https://img.shields.io/badge/Firebase-Auth-yellow?logo=firebase) ![PayOS](https://img.shields.io/badge/Payment-PayOS-green)
 
 ---
+## 👥 Thành viên nhóm
+
+
+| STT | Họ và Tên             | MSSV            |
+|:---:|-----------------------|-----------------|
+| 1   | **Trần Quỳnh Anh**    | `23810310147`   |
+| 2   | **Lê Minh Quân**      | `23810310115`   |
+| 3   | **Trần Minh Nguyệt**  | `23810310081`   |
 
 ## ✨ Các Tính Năng Nổi Bật
 
@@ -85,18 +93,3 @@ Chào mừng bạn đến với **VELMORA Jewelry House**, ứng dụng mua sắ
    npx expo start -c
    ```
 4. Mở ứng dụng **Expo Go** trên thiết bị thật, quét mã QR hiển thị ở Terminal để trải nghiệm toàn bộ sức mạnh của dự án! (Lưu ý điện thoại và máy tính cần kết nối chung 1 mạng Wifi).
-
----
-
-## 👥 Đội Ngũ Phát Triển
-
-Dự án được lên ý tưởng và hiện thực hóa bởi nhóm sinh viên tài năng và nhiệt huyết:
-
-| STT | Họ và Tên             | MSSV            |
-|:---:|-----------------------|-----------------|
-| 1   | **Trần Quỳnh Anh**    | `23810310147`   |
-| 2   | **Lê Minh Quân**      | `23810310115`   |
-| 3   | **Trần Minh Nguyệt**  | `23810310081`   |
-
----
-🤍 Xin chân thành cảm ơn bạn đã ghé thăm dự án **VELMORA**. Chúc bạn có một phiên bản triển khai mượt mà và tận hưởng công nghệ!
