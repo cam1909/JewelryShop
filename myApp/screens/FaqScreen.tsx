@@ -6,7 +6,8 @@ import Accordion from 'react-native-collapsible/Accordion';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Header from '@/components/Header';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
 
 const FAQ_DATA = [
   {
@@ -43,34 +44,34 @@ const FAQ_DATA = [
 
 export default function FaqScreen() {
   const [activeSections, setActiveSections] = useState<number[]>([]);
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
 
   const renderHeader = (section: { title: string }, _: number, isActive: boolean) => {
     return (
       <Animatable.View
         duration={300}
         transition="backgroundColor"
-        style={[styles.header, isActive ? styles.headerActive : {}]}>
-        <Text style={styles.headerText}>{section.title}</Text>
-        <Ionicons name={isActive ? 'chevron-up' : 'chevron-down'} size={20} color={COLORS.gold} />
+        style={[styles.header, { backgroundColor: currentTheme.card }, isActive ? [styles.headerActive, { borderBottomColor: currentTheme.border }] : {}]}>
+        <Text style={[styles.headerText, { color: currentTheme.text }]}>{section.title}</Text>
+        <Ionicons name={isActive ? 'chevron-up' : 'chevron-down'} size={20} color={currentTheme.accent} />
       </Animatable.View>
     );
   };
 
   const renderContent = (section: { title: string; content: string }) => {
     return (
-      <Animatable.View duration={300} transition="backgroundColor" style={styles.content}>
-        <Text style={styles.contentText}>{section.content}</Text>
+      <Animatable.View duration={300} transition="backgroundColor" style={[styles.content, { backgroundColor: currentTheme.card }]}>
+        <Text style={[styles.contentText, { color: currentTheme.textMuted }]}>{section.content}</Text>
       </Animatable.View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
         <Header title="Câu Hỏi Thường Gặp" showBack={true} />
       </SafeAreaView>
-
-
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Accordion
@@ -81,16 +82,16 @@ export default function FaqScreen() {
           renderContent={renderContent}
           onChange={setActiveSections}
           underlayColor="transparent"
-          sectionContainerStyle={styles.accordionSection}
+          sectionContainerStyle={[styles.accordionSection, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}
         />
 
         {/* Help Section */}
-        <View style={styles.helpSection}>
-          <Text style={styles.helpTitle}>Bạn cần thêm trợ giúp?</Text>
-          <Text style={styles.helpSubtitle}>
+        <View style={[styles.helpSection, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+          <Text style={[styles.helpTitle, { color: currentTheme.text }]}>Bạn cần thêm trợ giúp?</Text>
+          <Text style={[styles.helpSubtitle, { color: currentTheme.textMuted }]}>
             Nếu bạn không tìm thấy câu trả lời, vui lòng liên hệ với chúng tôi.
           </Text>
-          <TouchableOpacity style={styles.contactButton}>
+          <TouchableOpacity style={[styles.contactButton, { backgroundColor: currentTheme.accent }]}>
             <Ionicons name="chatbubble-ellipses-outline" size={16} color={COLORS.black} />
             <Text style={styles.contactButtonText}>Liên Hệ Tư Vấn</Text>
           </TouchableOpacity>

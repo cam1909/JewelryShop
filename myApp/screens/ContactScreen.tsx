@@ -8,11 +8,14 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
+    Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
+import Header from '@/components/Header';
 
 const SOCIAL_LINKS = [
   {
@@ -58,6 +61,9 @@ const OTHER_CONTACTS = [
 
 export default function ContactScreen() {
   const router = useRouter();
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
 
   const handlePress = (url: string) => {
     Linking.canOpenURL(url).then(supported => {
@@ -70,20 +76,18 @@ export default function ContactScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Liên Hệ & Hỗ Trợ</Text>
-          <View style={{ width: 22 }} />
-        </View>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+        <Header title="Liên Hệ & Hỗ Trợ" showBack={true} />
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.heroSection}>
+          <Image 
+            source={require('@/assets/images/products/bg.png')} 
+            style={styles.heroImage}
+          />
           <View style={styles.heroOverlay} />
           <Text style={styles.heroTitle}>Chúng tôi luôn sẵn sàng lắng nghe</Text>
           <Text style={styles.heroSubtitle}>
@@ -92,7 +96,7 @@ export default function ContactScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mạng xã hội</Text>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Mạng xã hội</Text>
           <View style={styles.socialGrid}>
             {SOCIAL_LINKS.map(item => (
               <TouchableOpacity
@@ -102,37 +106,45 @@ export default function ContactScreen() {
                 <View style={[styles.socialIconWrapper, { backgroundColor: item.color }]}>
                   <Ionicons name={item.icon} size={28} color={COLORS.white} />
                 </View>
-                <Text style={styles.socialButtonText}>{item.name}</Text>
+                <Text style={[styles.socialButtonText, { color: currentTheme.text }]}>{item.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Các kênh khác</Text>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Các kênh khác</Text>
           {OTHER_CONTACTS.map(item => (
             <TouchableOpacity
               key={item.name}
-              style={styles.contactItem}
+              style={[styles.contactItem, { backgroundColor: currentTheme.card, borderColor: currentTheme.border, borderWidth: 0.5 }]}
               onPress={() => handlePress(item.action)}>
-              <View style={styles.contactIconWrapper}>
-                <Ionicons name={item.icon} size={24} color={COLORS.gold} />
+              <View style={[styles.contactIconWrapper, { backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.1)' : 'rgba(92, 64, 51, 0.06)' }]}>
+                <Ionicons name={item.icon} size={24} color={currentTheme.accent} />
               </View>
               <View style={styles.contactInfo}>
-                <Text style={styles.contactName}>{item.name}</Text>
-                <Text style={styles.contactValue}>{item.value}</Text>
+                <Text style={[styles.contactName, { color: currentTheme.text }]}>{item.name}</Text>
+                <Text style={[styles.contactValue, { color: currentTheme.textMuted }]}>{item.value}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+              <Ionicons name="chevron-forward" size={20} color={currentTheme.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={styles.mapSection}>
-          <Text style={styles.sectionTitle}>Showroom</Text>
-          <TouchableOpacity style={styles.mapPreview} onPress={() => handlePress('https://maps.app.goo.gl/your-location')}>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Showroom</Text>
+          <TouchableOpacity 
+            style={styles.mapPreview} 
+            onPress={() => handlePress('https://www.google.com/maps/search/?api=1&query=235+Hoàng+Quốc+Việt,+Cầu+Giấy,+Hà+Nội')}
+            activeOpacity={0.9}
+          >
+            <Image 
+              source={require('@/assets/images/map_preview.png')} 
+              style={styles.mapImage}
+            />
             <View style={styles.mapOverlay} />
             <View style={styles.mapPin}>
-              <Ionicons name="location-sharp" size={32} color={COLORS.red} />
+              <Ionicons name="location-sharp" size={36} color={COLORS.red} />
             </View>
             <View style={styles.mapAddressBox}>
               <Text style={styles.mapAddress}>235 Hoàng Quốc Việt, Cầu Giấy, Hà Nội</Text>

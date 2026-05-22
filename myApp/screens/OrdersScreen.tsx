@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { api, addProductReview } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,7 +28,9 @@ const TABS = [
 
 export default function OrdersScreen() {
   const router = useRouter();
-  const { user, isAuthenticated, formatPrice, addToCart } = useAppContext();
+  const { user, isAuthenticated, formatPrice, addToCart, theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
   
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,13 +138,13 @@ export default function OrdersScreen() {
 
   if (!isAuthenticated) {
     return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
           <Header title="Đơn Hàng" showBack={true} />
         </SafeAreaView>
         <View style={styles.center}>
-          <Ionicons name="lock-closed-outline" size={64} color={COLORS.textMuted} />
-          <Text style={styles.emptyText}>Vui lòng đăng nhập để xem đơn hàng</Text>
+          <Ionicons name="lock-closed-outline" size={64} color={currentTheme.textMuted} />
+          <Text style={[styles.emptyText, { color: currentTheme.textMuted }]}>Vui lòng đăng nhập để xem đơn hàng</Text>
         </View>
       </View>
     );
@@ -156,7 +158,7 @@ export default function OrdersScreen() {
             <Ionicons
               name={rating >= star ? 'star' : 'star-outline'}
               size={36}
-              color={COLORS.gold}
+              color={currentTheme.accent}
               style={{ marginHorizontal: 4 }}
             />
           </TouchableOpacity>
@@ -175,24 +177,28 @@ export default function OrdersScreen() {
     if (!Array.isArray(orderItems)) orderItems = [];
     
     return (
-      <View style={styles.orderCard}>
+      <View style={[styles.orderCard, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
         <View style={styles.orderHeader}>
-          <Text style={styles.orderId}>Mã ĐH: {item.id}</Text>
-          <View style={[styles.statusBadge, item.status === 'cancelled' && {backgroundColor: 'rgba(244, 67, 54, 0.1)'}]}>
-            <Text style={[styles.statusText, item.status === 'cancelled' && {color: COLORS.red}]}>
+          <Text style={[styles.orderId, { color: currentTheme.text }]}>Mã ĐH: {item.id}</Text>
+          <View style={[
+            styles.statusBadge, 
+            { backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.1)' : 'rgba(92, 64, 51, 0.08)' },
+            item.status === 'cancelled' && {backgroundColor: 'rgba(244, 67, 54, 0.1)'}
+          ]}>
+            <Text style={[styles.statusText, { color: currentTheme.accent }, item.status === 'cancelled' && {color: COLORS.red}]}>
               {activeTab === 'pending' ? 'Chờ thanh toán' : activeTab === 'shipping' ? 'Đang giao' : item.status === 'cancelled' ? 'Đã Hủy' : 'Hoàn thành'}
             </Text>
           </View>
         </View>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: currentTheme.border }]} />
         
         {orderItems.map((prod: any, idx: number) => (
           <View key={idx} style={styles.productWrap}>
             <View style={styles.productRow}>
-              <Text style={styles.productName} numberOfLines={1}>
+              <Text style={[styles.productName, { color: currentTheme.text }]} numberOfLines={1}>
                 {prod.quantity}x {prod.name}
               </Text>
-              <Text style={styles.productPrice}>{formatPrice(prod.price * prod.quantity)}</Text>
+              <Text style={[styles.productPrice, { color: currentTheme.text }]}>{formatPrice(prod.price * prod.quantity)}</Text>
             </View>
             
             {/* Nếu hoàn thành, cho phép mua lại và đánh giá theo từng sản phẩm */}
@@ -200,30 +206,30 @@ export default function OrdersScreen() {
               <View style={styles.actionRowInfo}>
                 {item.status === 'completed' && (
                   <TouchableOpacity 
-                    style={styles.reviewBtn} 
+                    style={[styles.reviewBtn, { borderColor: currentTheme.border }]} 
                     onPress={() => {
                       setReviewProduct(prod);
                       setReviewModalVisible(true);
                     }}>
-                    <Text style={styles.reviewBtnText}>Đánh giá</Text>
+                    <Text style={[styles.reviewBtnText, { color: currentTheme.textMuted }]}>Đánh giá</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity 
-                  style={[styles.rebuyBtn, item.status === 'cancelled' && { marginLeft: 'auto' }]}
+                  style={[styles.rebuyBtn, { borderColor: currentTheme.accent }, item.status === 'cancelled' && { marginLeft: 'auto' }]}
                   onPress={() => handleRebuy(prod)}>
-                  <Text style={styles.rebuyBtnText}>Mua lại</Text>
+                  <Text style={[styles.rebuyBtnText, { color: currentTheme.accent }]}>Mua lại</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
         ))}
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: currentTheme.border }]} />
         <View style={styles.orderFooter}>
-          <Text style={styles.dateText}>{date}</Text>
+          <Text style={[styles.dateText, { color: currentTheme.textMuted }]}>{date}</Text>
           <View style={styles.totalWrap}>
-            <Text style={styles.totalLabel}>Tổng cộng: </Text>
-            <Text style={styles.totalValue}>{formatPrice(item.total)}</Text>
+            <Text style={[styles.totalLabel, { color: currentTheme.textMuted }]}>Tổng cộng: </Text>
+            <Text style={[styles.totalValue, { color: currentTheme.accent }]}>{formatPrice(item.total)}</Text>
           </View>
         </View>
 
@@ -240,12 +246,12 @@ export default function OrdersScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.primaryActionBtn, { flex: 1 }]}
+              style={[styles.primaryActionBtn, { flex: 1, backgroundColor: currentTheme.accent }]}
               onPress={() => {
                 router.push({ pathname: '/payment' as any, params: { orderId: item.id, total: item.total } });
               }}>
-              <Ionicons name="qr-code-outline" size={20} color={COLORS.black} style={{ marginRight: 8 }} />
-              <Text style={styles.primaryActionText}>Thanh Toán QR</Text>
+              <Ionicons name="qr-code-outline" size={20} color={isDarkMode ? COLORS.black : COLORS.white} style={{ marginRight: 8 }} />
+              <Text style={[styles.primaryActionText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>Thanh Toán QR</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -263,23 +269,23 @@ export default function OrdersScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="Đơn Hàng" showBack={true} />
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+        <Header title="Đơn Hàng Của Tôi" showBack={true} />
       </SafeAreaView>
 
       {/* TABS HEADER */}
-      <View style={styles.tabsContainer}>
+      <View style={[styles.tabsContainer, { borderBottomColor: currentTheme.border, backgroundColor: currentTheme.background }]}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <TouchableOpacity 
               key={tab.id} 
-              style={[styles.tabBtn, isActive && styles.tabBtnActive]}
+              style={[styles.tabBtn, isActive && [styles.tabBtnActive, { borderBottomColor: currentTheme.accent }]]}
               onPress={() => setActiveTab(tab.id as any)}
             >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+              <Text style={[styles.tabText, { color: currentTheme.textMuted }, isActive && [styles.tabTextActive, { color: currentTheme.accent }]]}>{tab.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -287,12 +293,12 @@ export default function OrdersScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.gold} />
+          <ActivityIndicator size="large" color={currentTheme.accent} />
         </View>
       ) : filteredOrders.length === 0 ? (
         <View style={styles.center}>
-          <Ionicons name="receipt-outline" size={64} color={COLORS.textMuted} />
-          <Text style={styles.emptyText}>Chưa có đơn hàng nào tại đây</Text>
+          <Ionicons name="receipt-outline" size={64} color={currentTheme.textMuted} />
+          <Text style={[styles.emptyText, { color: currentTheme.textMuted }]}>Chưa có đơn hàng nào tại đây</Text>
         </View>
       ) : (
         <FlatList
@@ -307,16 +313,16 @@ export default function OrdersScreen() {
       {/* MODAL ĐÁNH GIÁ SẢN PHẨM */}
       <Modal visible={reviewModalVisible} transparent animationType="slide">
         <View style={styles.modalBg}>
-          <View style={styles.reviewModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Đánh giá sản phẩm</Text>
+          <View style={[styles.reviewModalContent, { backgroundColor: currentTheme.background, borderColor: currentTheme.border, borderWidth: 1 }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: currentTheme.border }]}>
+              <Text style={[styles.modalTitle, { color: currentTheme.accent }]}>Đánh giá sản phẩm</Text>
               <TouchableOpacity onPress={() => setReviewModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.white} />
+                <Ionicons name="close" size={24} color={currentTheme.text} />
               </TouchableOpacity>
             </View>
             
             {reviewProduct && (
-              <Text style={styles.reviewProductName} numberOfLines={2}>
+              <Text style={[styles.reviewProductName, { color: currentTheme.text }]} numberOfLines={2}>
                 {reviewProduct.name}
               </Text>
             )}
@@ -324,17 +330,17 @@ export default function OrdersScreen() {
             {renderStars()}
 
             <TextInput
-              style={styles.inputComment}
+              style={[styles.inputComment, { backgroundColor: currentTheme.card, color: currentTheme.text, borderColor: currentTheme.border }]}
               placeholder="Chia sẻ cảm nhận của bạn về kiệt tác này..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={currentTheme.textMuted}
               multiline
               value={comment}
               onChangeText={setComment}
               textAlignVertical="top"
             />
 
-            <TouchableOpacity style={styles.submitReviewBtn} onPress={handleReviewSubmit}>
-              <Text style={styles.submitReviewText}>GỬI ĐÁNH GIÁ</Text>
+            <TouchableOpacity style={[styles.submitReviewBtn, { backgroundColor: currentTheme.accent }]} onPress={handleReviewSubmit}>
+              <Text style={[styles.submitReviewText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>GỬI ĐÁNH GIÁ</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -342,18 +348,18 @@ export default function OrdersScreen() {
       {/* Custom Info Alert */}
       <Modal visible={alertConfig.visible} transparent animationType="fade" onRequestClose={hideAlert}>
         <View style={styles.alertOverlay}>
-          <View style={styles.alertBox}>
+          <View style={[styles.alertBox, { backgroundColor: currentTheme.background, borderColor: currentTheme.border, borderWidth: 1 }]}>
             <View style={styles.alertIconWrap}>
               <Ionicons 
                 name={alertConfig.type === 'success' ? 'checkmark-circle' : alertConfig.type === 'error' ? 'close-circle' : 'information-circle'} 
                 size={56} 
-                color={alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : COLORS.gold} 
+                color={alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : currentTheme.accent} 
               />
             </View>
-            <Text style={styles.alertTitle}>{alertConfig.title}</Text>
-            <Text style={styles.alertMessage}>{alertConfig.message}</Text>
-            <TouchableOpacity style={styles.alertBtn} onPress={hideAlert}>
-              <Text style={styles.alertBtnText}>{alertConfig.type === 'success' ? 'TUYỆT VỜI!' : 'ĐÓNG'}</Text>
+            <Text style={[styles.alertTitle, { color: currentTheme.text }]}>{alertConfig.title}</Text>
+            <Text style={[styles.alertMessage, { color: currentTheme.textMuted }]}>{alertConfig.message}</Text>
+            <TouchableOpacity style={[styles.alertBtn, { backgroundColor: currentTheme.accent }]} onPress={hideAlert}>
+              <Text style={[styles.alertBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>{alertConfig.type === 'success' ? 'TUYỆT VỜI!' : 'ĐÓNG'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -362,15 +368,15 @@ export default function OrdersScreen() {
       {/* Custom Confirm Alert */}
       <Modal visible={confirmConfig.visible} transparent animationType="fade" onRequestClose={hideConfirm}>
         <View style={styles.alertOverlay}>
-          <View style={styles.alertBox}>
+          <View style={[styles.alertBox, { backgroundColor: currentTheme.background, borderColor: currentTheme.border, borderWidth: 1 }]}>
             <View style={styles.alertIconWrap}>
               <Ionicons name="help-circle" size={56} color={COLORS.red} />
             </View>
-            <Text style={styles.alertTitle}>{confirmConfig.title}</Text>
-            <Text style={styles.alertMessage}>{confirmConfig.message}</Text>
+            <Text style={[styles.alertTitle, { color: currentTheme.text }]}>{confirmConfig.title}</Text>
+            <Text style={[styles.alertMessage, { color: currentTheme.textMuted }]}>{confirmConfig.message}</Text>
             <View style={{flexDirection: 'row', gap: SPACING.md, width: '100%', marginTop: SPACING.lg}}>
-              <TouchableOpacity style={[styles.alertBtn, {flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.border}]} onPress={hideConfirm}>
-                <Text style={[styles.alertBtnText, {color: COLORS.white}]}>SUY NGHĨ LẠI</Text>
+              <TouchableOpacity style={[styles.alertBtn, {flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: currentTheme.border}]} onPress={hideConfirm}>
+                <Text style={[styles.alertBtnText, {color: currentTheme.text}]}>SUY NGHĨ LẠI</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.alertBtn, {flex: 1, backgroundColor: COLORS.red}]} onPress={() => { hideConfirm(); confirmConfig.onConfirm(); }}>
                 <Text style={[styles.alertBtnText, {color: COLORS.white}]}>CÓ, HỦY</Text>

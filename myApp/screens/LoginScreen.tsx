@@ -1,4 +1,4 @@
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { auth } from '@/firebase';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +21,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAppContext();
+  const { login, theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -43,8 +46,6 @@ export default function LoginScreen() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      // You might want to fetch the user's name from your database here
-      // For now, we'll use the email as a placeholder name
       login({ uid: user.uid, name: user.displayName || user.email!, email: user.email! });
       router.replace('/(tabs)/profile');
     } catch (error: any) {
@@ -72,12 +73,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.white} />
+            <Ionicons name="arrow-back" size={22} color={currentTheme.text} />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -91,22 +92,22 @@ export default function LoginScreen() {
             <View style={styles.diamondWrap}>
               <Ionicons name="diamond" size={48} color={COLORS.gold} />
             </View>
-            <Text style={styles.brandName}>V E L M O R A</Text>
+            <Text style={[styles.brandName, { color: currentTheme.text }]}>V E L M O R A</Text>
             <Text style={styles.brandSub}>JEWELRY HOUSE</Text>
           </View>
 
-          <Text style={styles.title}>Đăng Nhập</Text>
-          <Text style={styles.subtitle}>Chào mừng bạn quay trở lại</Text>
+          <Text style={[styles.title, { color: currentTheme.text }]}>Đăng Nhập</Text>
+          <Text style={[styles.subtitle, { color: currentTheme.textMuted }]}>Chào mừng bạn quay trở lại</Text>
 
           {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="mail-outline" size={18} color={COLORS.textMuted} />
+            <Text style={[styles.inputLabel, { color: currentTheme.text }]}>Email</Text>
+            <View style={[styles.inputWrap, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+              <Ionicons name="mail-outline" size={18} color={currentTheme.textMuted} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: currentTheme.text }]}
                 placeholder="Nhập email của bạn"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={currentTheme.textMuted}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
@@ -117,19 +118,19 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Mật khẩu</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="lock-closed-outline" size={18} color={COLORS.textMuted} />
+            <Text style={[styles.inputLabel, { color: currentTheme.text }]}>Mật khẩu</Text>
+            <View style={[styles.inputWrap, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+              <Ionicons name="lock-closed-outline" size={18} color={currentTheme.textMuted} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: currentTheme.text }]}
                 placeholder="Nhập mật khẩu"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={currentTheme.textMuted}
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={COLORS.textMuted} />
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={currentTheme.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -149,7 +150,7 @@ export default function LoginScreen() {
 
           {/* Register link */}
           <View style={styles.registerRow}>
-            <Text style={styles.registerText}>Chưa có tài khoản? </Text>
+            <Text style={[styles.registerText, { color: currentTheme.textMuted }]}>Chưa có tài khoản? </Text>
             <TouchableOpacity onPress={() => router.replace('/register')}>
               <Text style={styles.registerLink}>Đăng ký ngay</Text>
             </TouchableOpacity>
@@ -160,7 +161,7 @@ export default function LoginScreen() {
       {/* Custom Alert Modal */}
       <Modal visible={alertConfig.visible} transparent animationType="fade" onRequestClose={hideAlert}>
         <View style={styles.alertOverlay}>
-          <View style={styles.alertBox}>
+          <View style={[styles.alertBox, { backgroundColor: currentTheme.card }]}>
             <View style={styles.alertIconWrap}>
               <Ionicons 
                 name={alertConfig.type === 'success' ? 'checkmark-circle' : alertConfig.type === 'error' ? 'close-circle' : 'information-circle'} 
@@ -168,8 +169,8 @@ export default function LoginScreen() {
                 color={alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : COLORS.gold} 
               />
             </View>
-            <Text style={styles.alertTitle}>{alertConfig.title}</Text>
-            <Text style={styles.alertMessage} textAlign="center">{alertConfig.message}</Text>
+            <Text style={[styles.alertTitle, { color: currentTheme.text }]}>{alertConfig.title}</Text>
+            <Text style={[styles.alertMessage, { color: currentTheme.textMuted }]}>{alertConfig.message}</Text>
             <TouchableOpacity 
               style={[styles.alertBtn, {backgroundColor: alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : COLORS.gold}]} 
               onPress={hideAlert}
@@ -184,30 +185,30 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  safeArea: { backgroundColor: '#000' },
+  container: { flex: 1 },
+  safeArea: { backgroundColor: 'transparent' },
   header: { paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md },
   content: { paddingHorizontal: SPACING.xxl, paddingBottom: SPACING.huge },
 
   // Logo
   logoSection: { alignItems: 'center', marginBottom: SPACING.xxxl, marginTop: SPACING.xl },
   diamondWrap: { marginBottom: SPACING.lg },
-  brandName: { color: COLORS.white, fontSize: 22, fontWeight: '200', letterSpacing: 8 },
+  brandName: { fontSize: 22, fontWeight: '200', letterSpacing: 8 },
   brandSub: { color: COLORS.gold, fontSize: 10, letterSpacing: 5, marginTop: 4 },
 
-  title: { color: COLORS.white, fontSize: FONT_SIZES.xxxl, fontWeight: '300', fontStyle: 'italic', marginBottom: SPACING.sm },
-  subtitle: { color: COLORS.textMuted, fontSize: FONT_SIZES.md, marginBottom: SPACING.xxxl },
+  title: { fontSize: FONT_SIZES.xxxl, fontWeight: '300', fontStyle: 'italic', marginBottom: SPACING.sm },
+  subtitle: { fontSize: FONT_SIZES.md, marginBottom: SPACING.xxxl },
 
   // Input
   inputGroup: { marginBottom: SPACING.xl },
-  inputLabel: { color: COLORS.textSecondary, fontSize: FONT_SIZES.sm, fontWeight: '500', marginBottom: SPACING.sm },
+  inputLabel: { fontSize: FONT_SIZES.sm, fontWeight: '500', marginBottom: SPACING.sm },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    backgroundColor: COLORS.bgCard, borderRadius: BORDER_RADIUS.md,
+    borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
-    borderWidth: 0.5, borderColor: COLORS.border,
+    borderWidth: 0.5,
   },
-  input: { flex: 1, color: COLORS.white, fontSize: FONT_SIZES.md },
+  input: { flex: 1, fontSize: FONT_SIZES.md },
 
   forgotBtn: { alignSelf: 'flex-end', marginBottom: SPACING.xxl },
   forgotText: { color: COLORS.gold, fontSize: FONT_SIZES.sm },
@@ -223,15 +224,15 @@ const styles = StyleSheet.create({
 
   // Register
   registerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: SPACING.xxl },
-  registerText: { color: COLORS.textMuted, fontSize: FONT_SIZES.md },
+  registerText: { fontSize: FONT_SIZES.md },
   registerLink: { color: COLORS.gold, fontSize: FONT_SIZES.md, fontWeight: '600' },
 
   // Custom Alert Styles
   alertOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.xl },
-  alertBox: { backgroundColor: '#1A1A1A', width: '100%', borderRadius: BORDER_RADIUS.lg, padding: SPACING.xl, alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+  alertBox: { width: '100%', borderRadius: BORDER_RADIUS.lg, padding: SPACING.xl, alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
   alertIconWrap: { marginBottom: SPACING.md },
-  alertTitle: { color: COLORS.white, fontSize: FONT_SIZES.xl, fontWeight: 'bold', marginBottom: SPACING.sm, textAlign: 'center' },
-  alertMessage: { color: COLORS.textSecondary, fontSize: FONT_SIZES.md, textAlign: 'center', marginBottom: SPACING.xl, lineHeight: 22 },
+  alertTitle: { fontSize: FONT_SIZES.xl, fontWeight: 'bold', marginBottom: SPACING.sm, textAlign: 'center' },
+  alertMessage: { fontSize: FONT_SIZES.md, textAlign: 'center', marginBottom: SPACING.xl, lineHeight: 22 },
   alertBtn: { width: '100%', paddingVertical: SPACING.md, borderRadius: BORDER_RADIUS.md, alignItems: 'center' },
   alertBtnText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: 'bold' },
 });

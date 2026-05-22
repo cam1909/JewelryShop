@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 // IP của máy tính bạn (thay đổi nếu IP WiFi thay đổi)
-const BACKEND_IP = '192.168.1.8';
+const BACKEND_IP = '192.168.1.11';
 const BACKEND_PORT = 3001;
 
 // Tự động lấy IP từ Expo dev server để điện thoại thật có thể kết nối
@@ -138,6 +138,13 @@ export const api = {
     return await response.json();
   },
 
+  deleteAddress: async (userId: string, id: number) => {
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/addresses/${id}`, {
+      method: 'DELETE',
+    });
+    return await response.json();
+  },
+
   // ===== TÀI KHOẢN NGÂN HÀNG =====
   getBanks: async (userId: string) => {
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/banks`);
@@ -176,7 +183,7 @@ export const api = {
 // REVIEWS
 // ==========================================
 const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest?.debuggerHost;
-const BASE = debuggerHost ? `http://${debuggerHost.split(':')[0]}:3001` : 'http://192.168.1.8:3001';
+const BASE = debuggerHost ? `http://${debuggerHost.split(':')[0]}:3001` : 'http://192.168.1.11:3001';
 
 export const getProductReviews = async (productId: string) => {
   try {

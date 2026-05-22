@@ -1,14 +1,17 @@
-import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZES } from "@/constants/theme";
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZES, Theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
 import { api } from "@/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, StatusBar } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CheckoutScreen = () => {
   const router = useRouter();
-  const { cart, cartTotal, user, clearCart, formatPrice, addresses, defaultPaymentMethod, bankAccounts, setPaymentMethod, fetchUserData } = useAppContext();
+  const { cart, cartTotal, user, clearCart, formatPrice, addresses, defaultPaymentMethod, bankAccounts, setPaymentMethod, fetchUserData, theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
 
   const [voucher, setVoucher] = useState('');
   const [voucherApplied, setVoucherApplied] = useState<string | null>(null);
@@ -91,7 +94,7 @@ const CheckoutScreen = () => {
       if (result.success) {
         clearCart();
         showAlert("Đặt hàng thành công", "Đơn hàng của bạn đã được ghi nhận. Bạn có thể theo dõi tiến độ trong mục Đơn Hàng.", "success", () => {
-          router.push("/orders" as any);
+          router.replace("/orders" as any);
         });
       } else {
         showAlert("Lỗi đặt hàng", result.message || "Đã có lỗi xảy ra khi đặt hàng.", "error");
@@ -103,69 +106,76 @@ const CheckoutScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      
+      <View style={[styles.header, { backgroundColor: currentTheme.card, borderBottomColor: currentTheme.border }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text} />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: currentTheme.text }]}>Thanh Toán</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {/* Shipping Address Picker */}
-        <TouchableOpacity style={styles.section} onPress={() => router.push("/addresses" as any)}>
+        <TouchableOpacity style={[styles.section, { backgroundColor: currentTheme.card }]} onPress={() => router.push("/addresses" as any)}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="location-outline" size={20} color={COLORS.gold} />
-            <Text style={styles.sectionTitle}>Địa chỉ nhận hàng</Text>
+            <Ionicons name="location-outline" size={20} color={currentTheme.accent} />
+            <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Địa chỉ nhận hàng</Text>
           </View>
           
-          <View style={styles.addressBox}>
+          <View style={[styles.addressBox, { backgroundColor: currentTheme.background, borderColor: currentTheme.border }]}>
             {currentAddress ? (
               <View style={styles.addressInfo}>
                 <View style={styles.addrNameRow}>
-                  <Text style={styles.addrName}>{currentAddress.name}</Text>
-                  <Text style={styles.addrPhone}>{currentAddress.phone}</Text>
+                  <Text style={[styles.addrName, { color: currentTheme.text }]}>{currentAddress.name}</Text>
+                  <Text style={[styles.addrPhone, { color: currentTheme.textMuted }]}>{currentAddress.phone}</Text>
                 </View>
-                <Text style={styles.addrLine}>{currentAddress.address}</Text>
+                <Text style={[styles.addrLine, { color: currentTheme.textMuted }]}>{currentAddress.address}</Text>
               </View>
             ) : (
               <View style={styles.addressInfo}>
                 <Text style={styles.noAddrText}>Chưa có địa chỉ. Hãy nhấn vào đây để thêm địa chỉ giao hàng.</Text>
               </View>
             )}
-            <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+            <Ionicons name="chevron-forward" size={20} color={currentTheme.textMuted} />
           </View>
         </TouchableOpacity>
 
         {/* Voucher */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: currentTheme.card }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="pricetag-outline" size={20} color={COLORS.gold} />
-            <Text style={styles.sectionTitle}>Thẻ quà tặng / Coupon</Text>
+            <Ionicons name="pricetag-outline" size={20} color={currentTheme.accent} />
+            <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Thẻ quà tặng / Coupon</Text>
           </View>
           <View style={styles.voucherRow}>
             <TextInput
-              style={styles.voucherInput}
+              style={[styles.voucherInput, { backgroundColor: currentTheme.background, color: currentTheme.text, borderColor: currentTheme.border }]}
               placeholder="Nhập mã giảm giá..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={currentTheme.textMuted}
               value={voucher}
               onChangeText={setVoucher}
             />
-            <TouchableOpacity style={styles.applyBtn} onPress={handleApplyVoucher}>
-              <Text style={styles.applyBtnText}>Áp Dụng</Text>
+            <TouchableOpacity style={[styles.applyBtn, { backgroundColor: currentTheme.accent }]} onPress={handleApplyVoucher}>
+              <Text style={[styles.applyBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>Áp Dụng</Text>
             </TouchableOpacity>
           </View>
-          <Text style={{color: COLORS.textMuted, fontSize: 12, marginTop: 8, fontStyle: 'italic'}}>* Gợi ý: Chọn loại "Chuyển khoản / VietQR" và nhập mã "TEST2K" để test đơn 2K</Text>
+          <Text style={{color: currentTheme.textMuted, fontSize: 12, marginTop: 8, fontStyle: 'italic'}}>* Gợi ý: Chọn loại "Chuyển khoản / VietQR" và nhập mã "TEST2K" để test đơn 2K</Text>
         </View>
 
         {/* Payment Methods */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: currentTheme.card }]}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="card-outline" size={20} color={COLORS.gold} />
-            <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
+            <Ionicons name="card-outline" size={20} color={currentTheme.accent} />
+            <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Phương thức thanh toán</Text>
           </View>
           
           <TouchableOpacity 
-            style={[styles.paymentMethod, selectedPaymentMethod === 'COD' && styles.paymentMethodActive]} 
+            style={[
+              styles.paymentMethod, 
+              { borderColor: currentTheme.border },
+              selectedPaymentMethod === 'COD' && [styles.paymentMethodActive, { borderColor: currentTheme.accent, backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.08)' : 'rgba(92, 64, 51, 0.05)' }]
+            ]} 
             onPress={() => {
               if (voucherApplied === 'TEST2K') {
                 setVoucherApplied(null);
@@ -176,84 +186,88 @@ const CheckoutScreen = () => {
             }}
           >
             <View style={styles.paymentLeft}>
-              <Ionicons name="cash-outline" size={24} color={selectedPaymentMethod === 'COD' ? COLORS.gold : COLORS.textMuted} />
-              <Text style={[styles.paymentText, selectedPaymentMethod === 'COD' && styles.paymentTextActive]}>Thanh toán khi nhận hàng (COD)</Text>
+              <Ionicons name="cash-outline" size={24} color={selectedPaymentMethod === 'COD' ? currentTheme.accent : currentTheme.textMuted} />
+              <Text style={[styles.paymentText, { color: currentTheme.textMuted }, selectedPaymentMethod === 'COD' && [styles.paymentTextActive, { color: currentTheme.accent }]]}>Thanh toán khi nhận hàng (COD)</Text>
             </View>
-            <Ionicons name={selectedPaymentMethod === 'COD' ? "radio-button-on" : "radio-button-off"} size={20} color={selectedPaymentMethod === 'COD' ? COLORS.gold : COLORS.textMuted} />
+            <Ionicons name={selectedPaymentMethod === 'COD' ? "radio-button-on" : "radio-button-off"} size={20} color={selectedPaymentMethod === 'COD' ? currentTheme.accent : currentTheme.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.paymentMethod, selectedPaymentMethod === 'BANK_TRANSFER' && styles.paymentMethodActive]} 
+            style={[
+              styles.paymentMethod, 
+              { borderColor: currentTheme.border },
+              selectedPaymentMethod === 'BANK_TRANSFER' && [styles.paymentMethodActive, { borderColor: currentTheme.accent, backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.08)' : 'rgba(92, 64, 51, 0.05)' }]
+            ]} 
             onPress={() => setSelectedPaymentMethod('BANK_TRANSFER')}
           >
             <View style={styles.paymentLeft}>
-              <Ionicons name="qr-code-outline" size={24} color={selectedPaymentMethod === 'BANK_TRANSFER' ? COLORS.gold : COLORS.textMuted} />
-              <Text style={[styles.paymentText, selectedPaymentMethod === 'BANK_TRANSFER' && styles.paymentTextActive]}>Chuyển khoản / VietQR</Text>
+              <Ionicons name="qr-code-outline" size={24} color={selectedPaymentMethod === 'BANK_TRANSFER' ? currentTheme.accent : currentTheme.textMuted} />
+              <Text style={[styles.paymentText, { color: currentTheme.textMuted }, selectedPaymentMethod === 'BANK_TRANSFER' && [styles.paymentTextActive, { color: currentTheme.accent }]]}>Chuyển khoản / VietQR</Text>
             </View>
-            <Ionicons name={selectedPaymentMethod === 'BANK_TRANSFER' ? "radio-button-on" : "radio-button-off"} size={20} color={selectedPaymentMethod === 'BANK_TRANSFER' ? COLORS.gold : COLORS.textMuted} />
+            <Ionicons name={selectedPaymentMethod === 'BANK_TRANSFER' ? "radio-button-on" : "radio-button-off"} size={20} color={selectedPaymentMethod === 'BANK_TRANSFER' ? currentTheme.accent : currentTheme.textMuted} />
           </TouchableOpacity>
         </View>
 
         {/* Summary */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Chi tiết thanh toán</Text>
-          <View style={styles.divider} />
+        <View style={[styles.section, { backgroundColor: currentTheme.card }]}>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Chi tiết thanh toán</Text>
+          <View style={[styles.divider, { backgroundColor: currentTheme.border }]} />
           {cart.map(item => (
             <View key={`${item.id}-${item.selectedSize}`} style={styles.itemRow}>
-              <Text style={styles.itemName} numberOfLines={1}>
+              <Text style={[styles.itemName, { color: currentTheme.textMuted }]} numberOfLines={1}>
                 {item.quantity}x {item.name} {item.selectedSize ? `(Size: ${item.selectedSize})` : ''}
               </Text>
-              <Text style={styles.itemPrice}>{formatPrice(item.price * item.quantity)}</Text>
+              <Text style={[styles.itemPrice, { color: currentTheme.text }]}>{formatPrice(item.price * item.quantity)}</Text>
             </View>
           ))}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: currentTheme.border }]} />
           
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Tiền hàng</Text>
-            <Text style={styles.summaryValue}>{formatPrice(cartTotal)}</Text>
+            <Text style={[styles.summaryValue, { color: currentTheme.text }]}>{formatPrice(cartTotal)}</Text>
           </View>
           {voucherApplied && (
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, {color: COLORS.gold}]}>Khuyến mãi</Text>
-              <Text style={[styles.summaryValue, {color: COLORS.gold}]}>-{formatPrice(displayDiscount)}</Text>
+              <Text style={[styles.summaryLabel, {color: currentTheme.accent}]}>Khuyến mãi</Text>
+              <Text style={[styles.summaryValue, {color: currentTheme.accent}]}>-{formatPrice(displayDiscount)}</Text>
             </View>
           )}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
-            <Text style={styles.summaryValue}>{shipping === 0 ? 'Miễn phí' : formatPrice(shipping)}</Text>
+            <Text style={[styles.summaryValue, { color: currentTheme.text }]}>{shipping === 0 ? 'Miễn phí' : formatPrice(shipping)}</Text>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: currentTheme.border }]} />
           <View style={styles.summaryRow}>
-            <Text style={styles.totalLabel}>Tổng thanh toán</Text>
-            <Text style={styles.totalValue}>{formatPrice(total)}</Text>
+            <Text style={[styles.totalLabel, { color: currentTheme.text }]}>Tổng thanh toán</Text>
+            <Text style={[styles.totalValue, { color: currentTheme.accent }]}>{formatPrice(total)}</Text>
           </View>
         </View>
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: currentTheme.card, borderTopColor: currentTheme.border }]}>
         <View>
-          <Text style={styles.footerTotalLabel}>Tổng thanh toán</Text>
-          <Text style={styles.footerTotalValue}>{formatPrice(total)}</Text>
+          <Text style={[styles.footerTotalLabel, { color: currentTheme.textMuted }]}>Tổng thanh toán</Text>
+          <Text style={[styles.footerTotalValue, { color: currentTheme.accent }]}>{formatPrice(total)}</Text>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleConfirmOrder}>
-          <Text style={styles.buttonText}>ĐẶT HÀNG</Text>
+        <TouchableOpacity style={[styles.button, { backgroundColor: currentTheme.accent }]} onPress={handleConfirmOrder}>
+          <Text style={[styles.buttonText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>ĐẶT HÀNG</Text>
         </TouchableOpacity>
       </View>
       <Modal visible={alertConfig.visible} transparent animationType="fade" onRequestClose={hideAlert}>
         <View style={styles.alertOverlay}>
-          <View style={styles.alertBox}>
+          <View style={[styles.alertBox, { backgroundColor: currentTheme.background, borderColor: currentTheme.border, borderWidth: 1 }]}>
             <View style={styles.alertIconWrap}>
               <Ionicons 
                 name={alertConfig.type === 'success' ? 'checkmark-circle' : alertConfig.type === 'error' ? 'close-circle' : 'information-circle'} 
                 size={56} 
-                color={alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : COLORS.gold} 
+                color={alertConfig.type === 'success' ? '#4CAF50' : alertConfig.type === 'error' ? COLORS.red : currentTheme.accent} 
               />
             </View>
-            <Text style={styles.alertTitle}>{alertConfig.title}</Text>
-            <Text style={styles.alertMessage}>{alertConfig.message}</Text>
-            <TouchableOpacity style={styles.alertBtn} onPress={hideAlert}>
-              <Text style={styles.alertBtnText}>{alertConfig.type === 'success' ? 'TUYỆT VỜI!' : 'ĐÓNG'}</Text>
+            <Text style={[styles.alertTitle, { color: currentTheme.text }]}>{alertConfig.title}</Text>
+            <Text style={[styles.alertMessage, { color: currentTheme.textMuted }]}>{alertConfig.message}</Text>
+            <TouchableOpacity style={[styles.alertBtn, { backgroundColor: currentTheme.accent }]} onPress={hideAlert}>
+              <Text style={[styles.alertBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>{alertConfig.type === 'success' ? 'TUYỆT VỜI!' : 'ĐÓNG'}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -1,4 +1,4 @@
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppContext } from '@/context/AppContext';
+import Header from '@/components/Header';
 
 const MILESTONES = [
   { year: '2003', title: 'Thành lập', desc: 'VELMORA ra đời với xưởng chế tác đầu tiên tại TP.HCM' },
@@ -38,30 +40,27 @@ const STATS = [
 
 export default function AboutScreen() {
   const router = useRouter();
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.white} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Về Chúng Tôi</Text>
-          <View style={{ width: 22 }} />
-        </View>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+        <Header title="Về Chúng Tôi" showBack={true} />
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <View style={styles.hero}>
           <View style={styles.heroDiamondWrap}>
-            <Ionicons name="diamond" size={56} color={COLORS.gold} />
+            <Ionicons name="diamond" size={56} color={currentTheme.accent} />
           </View>
-          <Text style={styles.heroBrand}>V E L M O R A</Text>
-          <Text style={styles.heroSub}>JEWELRY HOUSE</Text>
-          <View style={styles.heroDivider} />
-          <Text style={styles.heroTagline}>
+          <Text style={[styles.heroBrand, { color: currentTheme.text }]}>V E L M O R A</Text>
+          <Text style={[styles.heroSub, { color: currentTheme.accent }]}>JEWELRY HOUSE</Text>
+          <View style={[styles.heroDivider, { backgroundColor: currentTheme.accent }]} />
+          <Text style={[styles.heroTagline, { color: currentTheme.textMuted }]}>
             "Nơi mỗi viên đá quý kể một câu chuyện,{'\n'}
             mỗi thiết kế là một tác phẩm nghệ thuật"
           </Text>
@@ -69,18 +68,18 @@ export default function AboutScreen() {
 
         {/* Story */}
         <View style={styles.section}>
-          <Text style={styles.sectionSub}>CÂU CHUYỆN CỦA CHÚNG TÔI</Text>
-          <Text style={styles.sectionTitle}>Hành Trình 20 Năm</Text>
+          <Text style={[styles.sectionSub, { color: currentTheme.accent }]}>CÂU CHUYỆN CỦA CHÚNG TÔI</Text>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Hành Trình 20 Năm</Text>
           <View style={styles.sectionDividerWrap}>
-            <View style={styles.sectionDivider} />
+            <View style={[styles.sectionDivider, { backgroundColor: currentTheme.accent }]} />
           </View>
-          <Text style={styles.storyText}>
+          <Text style={[styles.storyText, { color: currentTheme.textMuted }]}>
             VELMORA được thành lập vào năm 2003 bởi nghệ nhân kim hoàn Nguyễn Minh Tuấn 
             với niềm đam mê tạo ra những tác phẩm trang sức tinh xảo nhất. Từ một xưởng 
             chế tác nhỏ tại TP. Hồ Chí Minh, VELMORA đã phát triển thành thương hiệu 
             trang sức hàng đầu Việt Nam.
           </Text>
-          <Text style={styles.storyText}>
+          <Text style={[styles.storyText, { color: currentTheme.textMuted }]}>
             Chúng tôi tin rằng trang sức không chỉ là phụ kiện, mà là biểu tượng của tình 
             yêu, của những khoảnh khắc đáng nhớ trong cuộc đời. Mỗi sản phẩm VELMORA đều 
             được chế tác thủ công tỉ mỉ, mang trong mình câu chuyện riêng.
@@ -88,34 +87,34 @@ export default function AboutScreen() {
         </View>
 
         {/* Stats */}
-        <View style={styles.statsSection}>
+        <View style={[styles.statsSection, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
           {STATS.map((s, i) => (
             <View key={i} style={styles.statItem}>
-              <Text style={styles.statNumber}>{s.number}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+              <Text style={[styles.statNumber, { color: currentTheme.accent }]}>{s.number}</Text>
+              <Text style={[styles.statLabel, { color: currentTheme.textMuted }]}>{s.label}</Text>
             </View>
           ))}
         </View>
 
         {/* Timeline */}
         <View style={styles.section}>
-          <Text style={styles.sectionSub}>HÀNH TRÌNH PHÁT TRIỂN</Text>
-          <Text style={styles.sectionTitle}>Cột Mốc Quan Trọng</Text>
+          <Text style={[styles.sectionSub, { color: currentTheme.accent }]}>HÀNH TRÌNH PHÁT TRIỂN</Text>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Cột Mốc Quan Trọng</Text>
           <View style={styles.sectionDividerWrap}>
-            <View style={styles.sectionDivider} />
+            <View style={[styles.sectionDivider, { backgroundColor: currentTheme.accent }]} />
           </View>
 
           <View style={styles.timeline}>
             {MILESTONES.map((m, i) => (
               <View key={i} style={styles.timelineItem}>
                 <View style={styles.timelineLeft}>
-                  <Text style={styles.timelineYear}>{m.year}</Text>
-                  <View style={styles.timelineDot} />
-                  {i < MILESTONES.length - 1 && <View style={styles.timelineLine} />}
+                  <Text style={[styles.timelineYear, { color: currentTheme.accent }]}>{m.year}</Text>
+                  <View style={[styles.timelineDot, { backgroundColor: currentTheme.accent, borderColor: currentTheme.background }]} />
+                  {i < MILESTONES.length - 1 && <View style={[styles.timelineLine, { backgroundColor: currentTheme.border }]} />}
                 </View>
-                <View style={styles.timelineCard}>
-                  <Text style={styles.timelineTitle}>{m.title}</Text>
-                  <Text style={styles.timelineDesc}>{m.desc}</Text>
+                <View style={[styles.timelineCard, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+                  <Text style={[styles.timelineTitle, { color: currentTheme.text }]}>{m.title}</Text>
+                  <Text style={[styles.timelineDesc, { color: currentTheme.textMuted }]}>{m.desc}</Text>
                 </View>
               </View>
             ))}
@@ -123,21 +122,21 @@ export default function AboutScreen() {
         </View>
 
         {/* Values */}
-        <View style={styles.valuesSection}>
-          <Text style={styles.sectionSub}>GIÁ TRỊ CỐT LÕI</Text>
-          <Text style={styles.sectionTitle}>Triết Lý Của Chúng Tôi</Text>
+        <View style={[styles.valuesSection, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+          <Text style={[styles.sectionSub, { color: currentTheme.accent }]}>GIÁ TRỊ CỐT LÕI</Text>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Triết Lý Của Chúng Tôi</Text>
           <View style={styles.sectionDividerWrap}>
-            <View style={styles.sectionDivider} />
+            <View style={[styles.sectionDivider, { backgroundColor: currentTheme.accent }]} />
           </View>
 
           <View style={styles.valuesGrid}>
             {VALUES.map((v, i) => (
-              <View key={i} style={styles.valueCard}>
-                <View style={styles.valueIconWrap}>
-                  <Ionicons name={v.icon} size={28} color={COLORS.gold} />
+              <View key={i} style={[styles.valueCard, { backgroundColor: currentTheme.background, borderColor: currentTheme.border }]}>
+                <View style={[styles.valueIconWrap, { backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.12)' : 'rgba(92, 64, 51, 0.08)' }]}>
+                  <Ionicons name={v.icon} size={28} color={currentTheme.accent} />
                 </View>
-                <Text style={styles.valueTitle}>{v.title}</Text>
-                <Text style={styles.valueDesc}>{v.desc}</Text>
+                <Text style={[styles.valueTitle, { color: currentTheme.text }]}>{v.title}</Text>
+                <Text style={[styles.valueDesc, { color: currentTheme.textMuted }]}>{v.desc}</Text>
               </View>
             ))}
           </View>
@@ -145,10 +144,10 @@ export default function AboutScreen() {
 
         {/* Contact */}
         <View style={styles.contactSection}>
-          <Text style={styles.sectionSub}>LIÊN HỆ</Text>
-          <Text style={styles.sectionTitle}>Ghé Thăm Chúng Tôi</Text>
+          <Text style={[styles.sectionSub, { color: currentTheme.accent }]}>LIÊN HỆ</Text>
+          <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Ghé Thăm Chúng Tôi</Text>
           <View style={styles.sectionDividerWrap}>
-            <View style={styles.sectionDivider} />
+            <View style={[styles.sectionDivider, { backgroundColor: currentTheme.accent }]} />
           </View>
 
           {[
@@ -158,10 +157,10 @@ export default function AboutScreen() {
             { icon: 'time-outline' as const, label: '09:00 - 21:00, T2 - CN' },
           ].map((c, i) => (
             <View key={i} style={styles.contactItem}>
-              <View style={styles.contactIcon}>
-                <Ionicons name={c.icon} size={20} color={COLORS.gold} />
+              <View style={[styles.contactIcon, { backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.12)' : 'rgba(92, 64, 51, 0.08)' }]}>
+                <Ionicons name={c.icon} size={20} color={currentTheme.accent} />
               </View>
-              <Text style={styles.contactText}>{c.label}</Text>
+              <Text style={[styles.contactText, { color: currentTheme.text }]}>{c.label}</Text>
             </View>
           ))}
 
@@ -172,14 +171,14 @@ export default function AboutScreen() {
               { icon: 'logo-instagram', link: 'https://www.instagram.com/cmcm.1909/?hl=vi' },
               { icon: 'logo-tiktok', link: 'https://zalo.me/0962977820' },
             ].map((social, i) => (
-              <TouchableOpacity key={i} style={styles.socialBtn} onPress={() => Linking.openURL(social.link)}>
-                <Ionicons name={social.icon as any} size={22} color={COLORS.gold} />
+              <TouchableOpacity key={i} style={[styles.socialBtn, { borderColor: currentTheme.border }]} onPress={() => Linking.openURL(social.link)}>
+                <Ionicons name={social.icon as any} size={22} color={currentTheme.accent} />
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        <Text style={styles.copyright}>© 2025 VELMORA Jewelry House. All rights reserved.</Text>
+        <Text style={[styles.copyright, { color: currentTheme.textMuted }]}>© 2025 VELMORA Jewelry House. All rights reserved.</Text>
         <View style={{ height: 30 }} />
       </ScrollView>
     </View>

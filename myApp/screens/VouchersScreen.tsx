@@ -1,9 +1,10 @@
 import Header from '@/components/Header';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppContext } from '@/context/AppContext';
 
 const DEMO_VOUCHERS = [
   { id: '1', title: 'Freeship Mọi Đơn Hàng', desc: 'Sử dụng cho đơn từ 0đ', code: 'FREESHIPVK', exp: '30/06/2026', type: 'ship' },
@@ -13,60 +14,71 @@ const DEMO_VOUCHERS = [
 
 export default function VouchersScreen() {
   const [saved, setSaved] = useState<Record<string, boolean>>({});
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
 
   const handleSave = (id: string) => {
     setSaved(prev => ({ ...prev, [id]: true }));
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="" showBack={true} />
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+        <Header title="Ưu Đãi Của Tôi" showBack={true} />
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.promoInputRow}>
-          <View style={styles.inputWrap}>
-            <Ionicons name="pricetag-outline" size={20} color={COLORS.textMuted} />
-            <Text style={styles.placeholder}>Nhập mã khuyến mãi</Text>
+          <View style={[styles.inputWrap, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+            <Ionicons name="pricetag-outline" size={20} color={currentTheme.textMuted} />
+            <Text style={[styles.placeholder, { color: currentTheme.textMuted }]}>Nhập mã khuyến mãi</Text>
           </View>
-          <TouchableOpacity style={styles.applyBtn}>
-            <Text style={styles.applyBtnText}>Áp Dụng</Text>
+          <TouchableOpacity style={[styles.applyBtn, { backgroundColor: currentTheme.accent }]}>
+            <Text style={[styles.applyBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>Áp Dụng</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>Voucher cho bạn</Text>
+        <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Voucher cho bạn</Text>
 
         {DEMO_VOUCHERS.map((v) => (
-          <View key={v.id} style={styles.voucherCard}>
-            <View style={styles.voucherLeft}>
+          <View key={v.id} style={[styles.voucherCard, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+            <View style={[styles.voucherLeft, { backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.05)' : 'rgba(92, 64, 51, 0.05)', borderRightColor: currentTheme.border }]}>
               <Ionicons 
                 name={v.type === 'ship' ? 'bicycle' : v.type === 'discount' ? 'diamond' : 'gift'} 
                 size={32} 
-                color={COLORS.gold} 
+                color={currentTheme.accent} 
               />
             </View>
             <View style={styles.voucherCenter}>
-              <Text style={styles.voucherTitle} numberOfLines={1}>{v.title}</Text>
-              <Text style={styles.voucherDesc}>{v.desc}</Text>
-              <Text style={styles.voucherExp}>HSD: {v.exp}</Text>
+              <Text style={[styles.voucherTitle, { color: currentTheme.text }]} numberOfLines={1}>{v.title}</Text>
+              <Text style={[styles.voucherDesc, { color: currentTheme.textMuted }]}>{v.desc}</Text>
+              <Text style={[styles.voucherExp, { color: currentTheme.accent }]}>HSD: {v.exp}</Text>
             </View>
             <View style={styles.voucherRight}>
               <TouchableOpacity 
-                style={[styles.saveBtn, saved[v.id] && styles.savedBtn]}
+                style={[
+                  styles.saveBtn, 
+                  { borderColor: currentTheme.accent },
+                  saved[v.id] && [styles.savedBtn, { backgroundColor: currentTheme.border, borderColor: currentTheme.border }]
+                ]}
                 onPress={() => handleSave(v.id)}
                 disabled={saved[v.id]}
               >
-                <Text style={[styles.saveBtnText, saved[v.id] && styles.savedBtnText]}>
+                <Text style={[
+                  styles.saveBtnText, 
+                  { color: currentTheme.accent },
+                  saved[v.id] && [styles.savedBtnText, { color: currentTheme.textMuted }]
+                ]}>
                   {saved[v.id] ? 'Đã Lưu' : 'Lưu'}
                 </Text>
               </TouchableOpacity>
             </View>
             
             {/* Cutout punch holes for ticket effect */}
-            <View style={[styles.punchHole, styles.punchTop]} />
-            <View style={[styles.punchHole, styles.punchBottom]} />
+            <View style={[styles.punchHole, styles.punchTop, { backgroundColor: currentTheme.background, borderColor: currentTheme.border }]} />
+            <View style={[styles.punchHole, styles.punchBottom, { backgroundColor: currentTheme.background, borderColor: currentTheme.border }]} />
           </View>
         ))}
       </ScrollView>

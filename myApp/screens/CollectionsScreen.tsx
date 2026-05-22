@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import SectionHeader from '@/components/SectionHeader';
 import ProductCard from '@/components/card/ProductCard';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { formatPrice, useAppContext } from '@/context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -44,7 +44,9 @@ export default function CollectionsScreen() {
   const [searchText, setSearchText] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [showSort, setShowSort] = useState(false);
-  const { products, collections } = useAppContext();
+  const { products, collections, theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
 
   useEffect(() => {
     if (params.category && typeof params.category === 'string') {
@@ -95,69 +97,88 @@ export default function CollectionsScreen() {
   const selectedCatName = FILTER_CATEGORIES.find((c) => c.id === selectedCategory)?.name || 'Tất cả';
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
         <Header title="Bộ Sưu Tập" showBack={true} rightIcon="filter-outline" onRightPress={() => setShowSort(!showSort)} />
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color={COLORS.textMuted} />
+          <View style={[styles.searchBar, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+            <Ionicons name="search-outline" size={18} color={currentTheme.textMuted} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: currentTheme.text }]}
               placeholder="Tìm kiếm trang sức..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={currentTheme.textMuted}
               value={searchText}
               onChangeText={setSearchText}
             />
             {searchText.length > 0 && (
               <TouchableOpacity onPress={() => setSearchText('')}>
-                <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
+                <Ionicons name="close-circle" size={18} color={currentTheme.textMuted} />
               </TouchableOpacity>
             )}
           </View>
         </View>
+
+        {/* Category Filter Chips (Sticky) */}
+        <View style={{ paddingBottom: 8 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryFilter}>
+            {FILTER_CATEGORIES.map((cat) => {
+              const count = cat.id === 'all' ? products.length : (categoryStats[cat.id] || 0);
+              const isActive = selectedCategory === cat.id;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryChip, 
+                    { 
+                      backgroundColor: currentTheme.card, 
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(122, 99, 68, 0.22)' 
+                    }, 
+                    isActive && [styles.categoryChipActive, { backgroundColor: currentTheme.accent, borderColor: currentTheme.accent }]
+                  ]}
+                  onPress={() => setSelectedCategory(cat.id)}>
+                  <Text style={[styles.categoryChipText, { color: currentTheme.text }, isActive && [styles.categoryChipTextActive, { color: isDarkMode ? COLORS.black : COLORS.white }]]}>
+                    {cat.name}
+                  </Text>
+                  <View style={[
+                    styles.chipCount, 
+                    { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }, 
+                    isActive && [styles.chipCountActive, { backgroundColor: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.22)' }]
+                  ]}>
+                    <Text style={[
+                      styles.chipCountText, 
+                      { color: currentTheme.text }, 
+                      isActive && [styles.chipCountTextActive, { color: isDarkMode ? COLORS.black : COLORS.white }]
+                    ]}>
+                      {count}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Category Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryFilter}>
-          {FILTER_CATEGORIES.map((cat) => {
-            const count = cat.id === 'all' ? products.length : (categoryStats[cat.id] || 0);
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[styles.categoryChip, selectedCategory === cat.id && styles.categoryChipActive]}
-                onPress={() => setSelectedCategory(cat.id)}>
-                <Text style={[styles.categoryChipText, selectedCategory === cat.id && styles.categoryChipTextActive]}>
-                  {cat.name}
-                </Text>
-                <View style={[styles.chipCount, selectedCategory === cat.id && styles.chipCountActive]}>
-                  <Text style={[styles.chipCountText, selectedCategory === cat.id && styles.chipCountTextActive]}>
-                    {count}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
 
         {/* Sort dropdown */}
         {showSort && (
-          <View style={styles.sortDropdown}>
+          <View style={[styles.sortDropdown, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
             {SORT_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.id}
-                style={[styles.sortOption, sortBy === opt.id && styles.sortOptionActive]}
+                style={[styles.sortOption, { borderBottomColor: currentTheme.border }, sortBy === opt.id && styles.sortOptionActive]}
                 onPress={() => { setSortBy(opt.id); setShowSort(false); }}>
-                <Text style={[styles.sortOptionText, sortBy === opt.id && styles.sortOptionTextActive]}>
+                <Text style={[styles.sortOptionText, { color: currentTheme.text }, sortBy === opt.id && [styles.sortOptionTextActive, { color: currentTheme.accent }]]}>
                   {opt.name}
                 </Text>
-                {sortBy === opt.id && <Ionicons name="checkmark" size={16} color={COLORS.gold} />}
+                {sortBy === opt.id && <Ionicons name="checkmark" size={16} color={currentTheme.accent} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -166,14 +187,14 @@ export default function CollectionsScreen() {
         {/* Result header */}
         <View style={styles.resultHeader}>
           <View>
-            <Text style={styles.resultTitle}>
+            <Text style={[styles.resultTitle, { color: currentTheme.text }]}>
               {selectedCategory === 'all' ? 'Tất Cả Sản Phẩm' : selectedCatName}
             </Text>
-            <Text style={styles.resultCount}>{filteredProducts.length} sản phẩm</Text>
+            <Text style={[styles.resultCount, { color: currentTheme.textMuted }]}>{filteredProducts.length} sản phẩm</Text>
           </View>
-          <TouchableOpacity style={styles.sortBtn} onPress={() => setShowSort(!showSort)}>
-            <Ionicons name="swap-vertical-outline" size={16} color={COLORS.gold} />
-            <Text style={styles.sortBtnText}>Sắp xếp</Text>
+          <TouchableOpacity style={[styles.sortBtn, { borderColor: currentTheme.border }]} onPress={() => setShowSort(!showSort)}>
+            <Ionicons name="swap-vertical-outline" size={16} color={currentTheme.accent} />
+            <Text style={[styles.sortBtnText, { color: currentTheme.text }]}>Sắp xếp</Text>
           </TouchableOpacity>
         </View>
 
@@ -191,13 +212,13 @@ export default function CollectionsScreen() {
         {/* Empty state */}
         {filteredProducts.length === 0 && (
           <View style={styles.emptyState}>
-            <Ionicons name="search-outline" size={48} color={COLORS.borderLight} />
-            <Text style={styles.emptyTitle}>Không tìm thấy sản phẩm</Text>
-            <Text style={styles.emptySubtext}>Thử chọn danh mục khác hoặc thay đổi từ khóa</Text>
+            <Ionicons name="search-outline" size={48} color={currentTheme.border} />
+            <Text style={[styles.emptyTitle, { color: currentTheme.text }]}>Không tìm thấy sản phẩm</Text>
+            <Text style={[styles.emptySubtext, { color: currentTheme.textMuted }]}>Thử chọn danh mục khác hoặc thay đổi từ khóa</Text>
             <TouchableOpacity
-              style={styles.emptyBtn}
+              style={[styles.emptyBtn, { backgroundColor: currentTheme.accent }]}
               onPress={() => { setSelectedCategory('all'); setSearchText(''); }}>
-              <Text style={styles.emptyBtnText}>XEM TẤT CẢ</Text>
+              <Text style={[styles.emptyBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>XEM TẤT CẢ</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -214,15 +235,15 @@ export default function CollectionsScreen() {
                 return (
                   <TouchableOpacity
                     key={cat.id}
-                    style={styles.catSummaryCard}
+                    style={[styles.catSummaryCard, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}
                     onPress={() => setSelectedCategory(cat.id)}>
-                    <View style={styles.catSummaryIconWrap}>
-                      <Ionicons name={cat.icon} size={28} color={COLORS.gold} />
+                    <View style={[styles.catSummaryIconWrap, { backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.12)' : 'rgba(92, 64, 51, 0.08)' }]}>
+                      <Ionicons name={cat.icon} size={28} color={currentTheme.accent} />
                     </View>
-                    <Text style={styles.catSummaryName}>{cat.name}</Text>
-                    <Text style={styles.catSummaryCount}>{count} sản phẩm</Text>
+                    <Text style={[styles.catSummaryName, { color: currentTheme.text }]} numberOfLines={1}>{cat.name}</Text>
+                    <Text style={[styles.catSummaryCount, { color: currentTheme.textMuted }]}>{count} sản phẩm</Text>
                     {minPrice > 0 && (
-                      <Text style={styles.catSummaryPrice}>Từ {formatPrice(minPrice)}</Text>
+                      <Text style={[styles.catSummaryPrice, { color: currentTheme.accent }]}>Từ {formatPrice(minPrice)}</Text>
                     )}
                   </TouchableOpacity>
                 );
@@ -242,7 +263,11 @@ const styles = StyleSheet.create({
   safeArea: { backgroundColor: COLORS.bgDark },
 
   // Search
-  searchContainer: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.md },
+  searchContainer: { 
+    paddingHorizontal: SPACING.lg, 
+    paddingTop: SPACING.sm, 
+    paddingBottom: SPACING.sm 
+  },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.bgCard, borderRadius: BORDER_RADIUS.lg,

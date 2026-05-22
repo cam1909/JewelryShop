@@ -158,14 +158,17 @@ export const Fonts = Platform.select({
 
 export const Theme = {
   light: {
-    background: '#FFFFFF',
-    card: '#F5F5F5',
-    text: '#1A1A1A',
-    textMuted: '#666666',
-    border: '#E5E5E5',
-    tabBarBg: '#FFFFFF',
-    tabBarActive: '#C9A96E',
-    tabBarInactive: '#999999',
+    background: '#FAF9F6', // Premium warm ivory
+    card: '#F4F0E6',       // Elegant soft sand card
+    text: '#222222',       // Cozy deep charcoal
+    textMuted: '#706B63',  // Softer warm gray
+    border: '#D5C8B4',     // Soft luxury champagne-sand gold border - bright, fresh & premium
+    tabBarBg: '#FAF9F6',
+    tabBarActive: '#5C4033', // Luxury Chestnut Brown in light mode
+    tabBarInactive: '#99948B',
+    accent: '#5C4033',       // Rich chocolate brown accent
+    accentLight: '#8B6B5C',
+    accentDark: '#402B21',
   },
   dark: {
     background: '#0F0F0F',
@@ -174,7 +177,10 @@ export const Theme = {
     textMuted: '#777777',
     border: '#333333',
     tabBarBg: '#111111',
-    tabBarActive: '#C9A96E',
+    tabBarActive: '#C9A96E', // Luxury Gold in dark mode
     tabBarInactive: '#666666',
+    accent: '#C9A96E',       // Gold accent
+    accentLight: '#D4BC8A',
+    accentDark: '#B8944F',
   },
 };

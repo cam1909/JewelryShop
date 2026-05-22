@@ -1,4 +1,4 @@
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { Product, formatPrice, useAppContext } from '@/context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -13,7 +13,7 @@ interface ProductCardProps {
   onPress?: () => void;
 }
 
-const renderStars = (rating: number) => {
+const renderStars = (rating: number, color: string) => {
   const stars = [];
   for (let i = 1; i <= 5; i++) {
     stars.push(
@@ -21,7 +21,7 @@ const renderStars = (rating: number) => {
         key={i}
         name={i <= Math.floor(rating) ? 'star' : i - 0.5 <= rating ? 'star-half' : 'star-outline'}
         size={12}
-        color={COLORS.gold}
+        color={color}
       />
     );
   }
@@ -29,10 +29,11 @@ const renderStars = (rating: number) => {
 };
 
 export default function ProductCard({ product, cardWidth, onPress }: ProductCardProps) {
-  const { isInWishlist, toggleWishlist, isAuthenticated } = useAppContext();
+  const { isInWishlist, toggleWishlist, isAuthenticated, theme } = useAppContext();
   const router = useRouter();
   const liked = isInWishlist(product.id);
   const width = cardWidth || (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.md) / 2;
+  const currentTheme = Theme[theme];
 
   const handleWishlistToggle = () => {
     if (!isAuthenticated) {
@@ -44,7 +45,7 @@ export default function ProductCard({ product, cardWidth, onPress }: ProductCard
 
   return (
     <TouchableOpacity
-      style={[styles.card, { width }]}
+      style={[styles.card, { width, backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}
       activeOpacity={0.8}
       onPress={onPress}>
       {/* Image */}
@@ -63,7 +64,7 @@ export default function ProductCard({ product, cardWidth, onPress }: ProductCard
             style={[
               styles.badge,
               product.badgeType === 'sale' && styles.badgeSale,
-              product.badgeType === 'new' && styles.badgeNew,
+              product.badgeType === 'new' && { backgroundColor: currentTheme.accent },
               product.badgeType === 'outofstock' && styles.badgeOutOfStock,
             ]}>
             <Text style={styles.badgeText}>{product.badge}</Text>
@@ -82,17 +83,17 @@ export default function ProductCard({ product, cardWidth, onPress }: ProductCard
 
       {/* Info */}
       <View style={styles.info}>
-        <Text style={styles.category}>{product.category}</Text>
-        <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
+        <Text style={[styles.category, { color: currentTheme.accent }]}>{product.category}</Text>
+        <Text style={[styles.name, { color: currentTheme.text }]} numberOfLines={2}>{product.name}</Text>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatPrice(product.price)}</Text>
+          <Text style={[styles.price, { color: currentTheme.text }]}>{formatPrice(product.price)}</Text>
           {product.originalPrice && (
-            <Text style={styles.originalPrice}>{formatPrice(product.originalPrice)}</Text>
+            <Text style={[styles.originalPrice, { color: currentTheme.textMuted }]}>{formatPrice(product.originalPrice)}</Text>
           )}
         </View>
         <View style={styles.ratingRow}>
-          <View style={styles.starsRow}>{renderStars(product.rating)}</View>
-          <Text style={styles.reviewCount}>({product.reviews})</Text>
+          <View style={styles.starsRow}>{renderStars(product.rating, currentTheme.accent)}</View>
+          <Text style={[styles.reviewCount, { color: currentTheme.textMuted }]}>({product.reviews})</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -101,11 +102,9 @@ export default function ProductCard({ product, cardWidth, onPress }: ProductCard
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.bgCard,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     borderWidth: 0.5,
-    borderColor: COLORS.border,
   },
   imageWrap: {
     height: 200,
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   name: {
-    color: COLORS.white,
     fontSize: FONT_SIZES.md,
     fontWeight: '400',
     marginBottom: SPACING.sm,
@@ -173,12 +171,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   price: {
-    color: COLORS.white,
     fontSize: FONT_SIZES.md,
     fontWeight: '700',
   },
   originalPrice: {
-    color: COLORS.textMuted,
     fontSize: FONT_SIZES.sm,
     textDecorationLine: 'line-through',
   },
@@ -192,7 +188,6 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   reviewCount: {
-    color: COLORS.textMuted,
     fontSize: FONT_SIZES.xs,
   },
 });

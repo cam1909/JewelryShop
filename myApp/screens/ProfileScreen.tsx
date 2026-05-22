@@ -1,9 +1,9 @@
 import Header from '@/components/Header';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   StatusBar,
@@ -11,15 +11,18 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 const MENU_SECTIONS = [
   {
     title: 'Đơn Hàng',
     items: [
       { id: '1', icon: 'receipt-outline' as const, label: 'Đơn hàng của tôi', badge: null, route: '/orders' },
-      { id: '2', icon: 'time-outline' as const, label: 'Lịch sử mua hàng', badge: null, route: '/orders' },
       { id: '3', icon: 'refresh-outline' as const, label: 'Đổi trả & Hoàn tiền', badge: null, route: '/returns' },
     ],
   },
@@ -44,102 +47,182 @@ const MENU_SECTIONS = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { isAuthenticated, user, logout, wishlist, cart, orderCount, voucherCount } = useAppContext();
+  const { isAuthenticated, user, logout, wishlist, cart, orderCount, voucherCount, theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
+
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+  // Load avatar locally when user state is loaded
+  useEffect(() => {
+    if (isAuthenticated && user?.uid) {
+      const loadAvatar = async () => {
+        try {
+          const uri = await AsyncStorage.getItem(`@user_avatar_${user.uid}`);
+          setAvatarUri(uri);
+        } catch (e) {
+          console.error("Failed to load avatar:", e);
+        }
+      };
+      loadAvatar();
+    } else {
+      setAvatarUri(null);
+    }
+  }, [isAuthenticated, user?.uid]);
+
+  const handleUploadAvatar = async () => {
+    if (!isAuthenticated || !user?.uid) return;
+
+    // Request permissions
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Quyền truy cập',
+        'Xin lỗi, ứng dụng cần quyền truy cập thư viện ảnh để cập nhật ảnh đại diện của bạn!',
+        [{ text: 'Đóng', style: 'cancel' }]
+      );
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedUri = result.assets[0].uri;
+        setAvatarUri(selectedUri);
+        await AsyncStorage.setItem(`@user_avatar_${user.uid}`, selectedUri);
+      }
+    } catch (e) {
+      console.error("Error picking avatar image:", e);
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tải ảnh lên. Vui lòng thử lại!');
+    }
+  };
 
   const handleLogout = () => {
     logout();
-    // Optionally, show a toast or confirmation message
   };
 
   const handleMenuItemPress = (route: string | null) => {
     if (route) {
       router.push(route as any);
     }
-    // Handle other cases if needed, e.g., open a modal
   };
 
+  if (!isAuthenticated) {
+    return (
+      <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+          <Header title="Tài Khoản" showBack={false} />
+        </SafeAreaView>
+        <View style={styles.lockedContainer}>
+          <View style={styles.lockCircle}>
+            <Ionicons name="lock-closed" size={48} color={COLORS.gold} />
+          </View>
+          <Text style={[styles.lockedTitle, { color: currentTheme.text }]}>Tài Khoản Của Bạn</Text>
+          <Text style={[styles.lockedSubtitle, { color: currentTheme.textMuted }]}>
+            Vui lòng đăng nhập hoặc đăng ký tài khoản mới để xem đơn hàng, lịch sử mua sắm và quản lý thông tin thành viên của bạn.
+          </Text>
+          <TouchableOpacity 
+            style={styles.lockedLoginBtn} 
+            onPress={() => router.push('/login' as any)}
+          >
+            <Text style={styles.lockedLoginBtnText}>ĐĂNG NHẬP NGAY</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.lockedRegisterBtn} 
+            onPress={() => router.push('/register' as any)}
+          >
+            <Text style={styles.lockedRegisterBtnText}>Tạo tài khoản mới</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
         <Header title="Tài Khoản" showBack={true} />
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile Card */}
-        <TouchableOpacity
-          style={styles.profileCard}
-          onPress={() => !isAuthenticated && router.push('/login' as any)}>
-          <View style={styles.avatarWrap}>
+        <View
+          style={[styles.profileCard, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}
+        >
+          <TouchableOpacity 
+            style={styles.avatarWrap}
+            onPress={isAuthenticated ? handleUploadAvatar : () => router.push('/login' as any)}
+            activeOpacity={0.8}
+          >
             <View style={styles.avatar}>
-              <Ionicons name="person" size={36} color={COLORS.gold} />
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons name="person" size={36} color={COLORS.gold} />
+              )}
             </View>
             {isAuthenticated && (
-              <View style={styles.vipBadge}>
-                <Ionicons name="diamond" size={10} color={COLORS.black} />
+              <View style={styles.cameraBadge}>
+                <Ionicons name="camera" size={11} color={COLORS.black} />
               </View>
             )}
-          </View>
+          </TouchableOpacity>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{isAuthenticated ? user?.name : 'Khách hàng'}</Text>
-            <Text style={styles.profileEmail}>
+            <Text style={[styles.profileName, { color: currentTheme.text }]}>{isAuthenticated ? user?.name : 'Khách hàng'}</Text>
+            <Text style={[styles.profileEmail, { color: currentTheme.textMuted }]}>
               {isAuthenticated ? user?.email : 'Đăng nhập để trải nghiệm tốt hơn'}
             </Text>
           </View>
           {!isAuthenticated && (
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/login' as any)}>
               <Ionicons name="chevron-forward" size={20} color={COLORS.gold} />
             </TouchableOpacity>
           )}
-        </TouchableOpacity>
-
-        {/* Auth buttons */}
-        {!isAuthenticated && (
-          <View style={styles.authSection}>
-            <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login' as any)}>
-              <Text style={styles.loginBtnText}>ĐĂNG NHẬP</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.registerBtn} onPress={() => router.push('/register' as any)}>
-              <Text style={styles.registerBtnText}>ĐĂNG KÝ</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        </View>
 
         {/* Stats */}
-        <View style={styles.statsRow}>
+        <View style={[styles.statsRow, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{isAuthenticated ? orderCount : '0'}</Text>
-            <Text style={styles.statLabel}>Đơn hàng</Text>
+            <Text style={[styles.statNumber, { color: currentTheme.text }]}>{isAuthenticated ? orderCount : '0'}</Text>
+            <Text style={[styles.statLabel, { color: currentTheme.textMuted }]}>Đơn hàng</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: currentTheme.border }]} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{wishlist.length}</Text>
-            <Text style={styles.statLabel}>Yêu thích</Text>
+            <Text style={[styles.statNumber, { color: currentTheme.text }]}>{wishlist.length}</Text>
+            <Text style={[styles.statLabel, { color: currentTheme.textMuted }]}>Yêu thích</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: currentTheme.border }]} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{isAuthenticated ? voucherCount : '0'}</Text>
-            <Text style={styles.statLabel}>Voucher</Text>
+            <Text style={[styles.statNumber, { color: currentTheme.text }]}>{isAuthenticated ? voucherCount : '0'}</Text>
+            <Text style={[styles.statLabel, { color: currentTheme.textMuted }]}>Voucher</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: currentTheme.border }]} />
           <View style={styles.statItem}>
             <Ionicons name="diamond" size={18} color={COLORS.gold} />
-            <Text style={styles.statLabel}>{isAuthenticated ? 'VIP' : '---'}</Text>
+            <Text style={[styles.statLabel, { color: currentTheme.textMuted }]}>{isAuthenticated ? 'VIP' : '---'}</Text>
           </View>
         </View>
 
         {/* Menu sections */}
         {MENU_SECTIONS.map((section) => (
           <View key={section.title} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>{section.title}</Text>
             {section.items.map(item => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.menuItem}
+                style={[styles.menuItem, { borderBottomColor: currentTheme.border, borderBottomWidth: 0.5 }]}
                 onPress={() => handleMenuItemPress(item.route)}>
                 <View style={styles.menuItemLeft}>
-                  <Ionicons name={item.icon} size={22} color={COLORS.textMuted} />
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Ionicons name={item.icon} size={22} color={currentTheme.textMuted} />
+                  <Text style={[styles.menuItemLabel, { color: currentTheme.text }]}>{item.label}</Text>
                 </View>
                 <View style={styles.menuItemRight}>
                   {item.badge && (
@@ -157,7 +240,7 @@ export default function ProfileScreen() {
                       </Text>
                     </View>
                   )}
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+                  <Ionicons name="chevron-forward" size={20} color={currentTheme.textMuted} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -167,7 +250,7 @@ export default function ProfileScreen() {
         {/* Logout Button */}
         {isAuthenticated && (
           <View style={styles.logoutSection}>
-            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: currentTheme.card }]} onPress={handleLogout}>
               <Text style={styles.logoutBtnText}>ĐĂNG XUẤT</Text>
             </TouchableOpacity>
           </View>
@@ -178,16 +261,16 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bgDark },
-  safeArea: { backgroundColor: COLORS.bgDark },
+  container: { flex: 1 },
+  safeArea: {},
 
   // Profile
   profileCard: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: SPACING.lg, marginTop: SPACING.md,
-    padding: SPACING.xl, backgroundColor: COLORS.bgCard,
+    padding: SPACING.xl,
     borderRadius: BORDER_RADIUS.lg, borderWidth: 0.5,
-    borderColor: COLORS.border, gap: SPACING.lg,
+    gap: SPACING.lg,
   },
   avatarWrap: { position: 'relative' },
   avatar: {
@@ -195,16 +278,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(201, 169, 110, 0.15)',
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 1.5, borderColor: COLORS.gold,
+    overflow: 'hidden',
   },
-  vipBadge: {
+  avatarImage: {
+    width: '100%', height: '100%',
+    borderRadius: 32,
+    resizeMode: 'cover',
+  },
+  cameraBadge: {
     position: 'absolute', bottom: -2, right: -2,
-    width: 20, height: 20, borderRadius: 10,
+    width: 22, height: 22, borderRadius: 11,
     backgroundColor: COLORS.gold, justifyContent: 'center', alignItems: 'center',
     borderWidth: 2, borderColor: COLORS.bgCard,
   },
   profileInfo: { flex: 1 },
-  profileName: { color: COLORS.white, fontSize: FONT_SIZES.lg, fontWeight: '600', marginBottom: 2 },
-  profileEmail: { color: COLORS.textMuted, fontSize: FONT_SIZES.sm },
+  profileName: { fontSize: FONT_SIZES.lg, fontWeight: '600', marginBottom: 2 },
+  profileEmail: { fontSize: FONT_SIZES.sm },
 
   // Auth
   authSection: { flexDirection: 'row', marginHorizontal: SPACING.lg, marginTop: SPACING.lg, gap: SPACING.md },
@@ -217,18 +306,17 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: SPACING.lg, marginTop: SPACING.xl,
-    padding: SPACING.xl, backgroundColor: COLORS.bgCard,
-    borderRadius: BORDER_RADIUS.lg, borderWidth: 0.5, borderColor: COLORS.border,
+    padding: SPACING.xl,
+    borderRadius: BORDER_RADIUS.lg, borderWidth: 0.5,
   },
   statItem: { flex: 1, alignItems: 'center', gap: SPACING.xs },
-  statNumber: { color: COLORS.white, fontSize: FONT_SIZES.xl, fontWeight: '700' },
-  statLabel: { color: COLORS.textMuted, fontSize: FONT_SIZES.xs },
-  statDivider: { width: 0.5, height: 30, backgroundColor: COLORS.border },
+  statNumber: { fontSize: FONT_SIZES.xl, fontWeight: '700' },
+  statLabel: { fontSize: FONT_SIZES.xs },
+  statDivider: { width: 0.5, height: 30 },
 
   // Menu
   section: { marginHorizontal: SPACING.lg, marginTop: SPACING.xl },
   sectionTitle: {
-    color: COLORS.textSecondary,
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     marginBottom: SPACING.md,
@@ -240,10 +328,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.md,
-  },
-  menuItemBorder: {
-    borderBottomWidth: 0.5,
-    borderBottomColor: COLORS.border,
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -259,7 +343,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuItemLabel: {
-    color: COLORS.white,
     fontSize: FONT_SIZES.md,
   },
   menuItemRight: {
@@ -293,7 +376,6 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
   },
   logoutBtn: {
-    backgroundColor: COLORS.bgCard,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
@@ -302,5 +384,66 @@ const styles = StyleSheet.create({
     color: COLORS.red,
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
+  },
+
+  // Locked State
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xxl,
+    paddingBottom: 80,
+  },
+  lockCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(201, 169, 110, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.xl,
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+  },
+  lockedTitle: {
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold',
+    marginBottom: SPACING.md,
+    fontStyle: 'italic',
+  },
+  lockedSubtitle: {
+    fontSize: FONT_SIZES.md,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: SPACING.xxxl,
+    paddingHorizontal: SPACING.md,
+  },
+  lockedLoginBtn: {
+    backgroundColor: COLORS.gold,
+    width: '100%',
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  lockedLoginBtnText: {
+    color: COLORS.black,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+  },
+  lockedRegisterBtn: {
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+    width: '100%',
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+  },
+  lockedRegisterBtnText: {
+    color: COLORS.gold,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '700',
+    letterSpacing: 1.5,
   },
 });

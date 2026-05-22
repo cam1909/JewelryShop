@@ -189,11 +189,32 @@ app.post('/api/orders', async (req, res) => {
 // Lấy 1 đơn hàng cụ thể để check trạng thái (Dành cho Polling Webhook)
 app.get('/api/orders/single/:id', async (req, res) => {
   try {
-    const order = await Order.findByPk(req.params.id);
+    const orderIdStr = req.params.id;
+    const order = await Order.findByPk(orderIdStr);
     if (!order) return res.status(404).json({ success: false });
+
+    // Nếu đơn hàng chưa thanh toán và dùng cổng QR PayOS, chủ động check trực tiếp từ PayOS Server
+    if (order.status === 'pending') {
+      try {
+        const numericId = Number(orderIdStr.replace('order_', ''));
+        const paymentInfo = await payos.getPaymentLinkInformation(numericId);
+        
+        console.log(`POLLING CHECK PAYOS STATUS FOR ORDER ${orderIdStr}:`, paymentInfo.status);
+        
+        if (paymentInfo.status === 'PAID') {
+          order.status = 'shipping';
+          await order.save();
+          console.log(`ORDER ${orderIdStr} CONFIRMED PAID DIRECTLY FROM PAYOS STATUS CHECK`);
+        }
+      } catch (payosError) {
+        // Nếu chưa khởi tạo link hoặc lỗi gì đó thì bỏ qua, trả về trạng thái db hiện tại
+        console.log(`Direct check with PayOS skipped or not yet initialized for ${orderIdStr}:`, payosError.message);
+      }
+    }
+
     res.json({ success: true, data: order });
   } catch (error) {
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: 'Lỗi server', error });
   }
 });
 
@@ -245,18 +266,23 @@ app.post('/api/orders/:id/payment-link', async (req, res) => {
     const order = await Order.findByPk(orderIdStr);
     if (!order) return res.status(404).json({ success: false, message: 'Đơn hàng không tồn tại' });
 
-    // The host below should be updated to App scheme if you want deep linking back
+    // PayOS description STRICT requirement: alphanumeric and hyphens only, NO underscores (_) or special characters!
+    const safeDescription = `Thanh-toan-${numericId}`.substring(0, 25);
+
     const body = {
       orderCode: numericId,
-      amount: order.total,
-      description: orderIdStr.substring(0, 25),
+      amount: Math.round(Number(order.total)),
+      description: safeDescription,
       cancelUrl: 'https://velmora.vn/cancel',
       returnUrl: 'https://velmora.vn/success'
     };
 
+    console.log("PAYOS CREATE PAYMENT LINK REQUEST BODY:", body);
+
     const paymentLinkRes = await payos.createPaymentLink(body);
     res.json({ success: true, checkoutUrl: paymentLinkRes.checkoutUrl, qrCode: paymentLinkRes.qrCode, data: paymentLinkRes });
   } catch (e) {
+    console.error("LỖI KHỞI TẠO PAYOS:", e);
     res.status(500).json({ success: false, message: e.message || 'Lỗi PayOS' });
   }
 });
@@ -352,6 +378,28 @@ app.put('/api/users/:userId/addresses/:id/default', async (req, res) => {
     await Address.update({ isDefault: false }, { where: { userId } });
     await Address.update({ isDefault: true }, { where: { id, userId } });
     res.json({ success: true, message: 'Đã cập nhật địa chỉ mặc định' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server', error });
+  }
+});
+
+// Xóa địa chỉ
+app.delete('/api/users/:userId/addresses/:id', async (req, res) => {
+  try {
+    const { userId, id } = req.params;
+    const addressToDelete = await Address.findOne({ where: { id, userId } });
+    if (!addressToDelete) {
+      return res.status(404).json({ success: false, message: 'Địa chỉ không tồn tại' });
+    }
+    const wasDefault = addressToDelete.isDefault;
+    await Address.destroy({ where: { id, userId } });
+    if (wasDefault) {
+      const remainingAddress = await Address.findOne({ where: { userId } });
+      if (remainingAddress) {
+        await remainingAddress.update({ isDefault: true });
+      }
+    }
+    res.json({ success: true, message: 'Đã xóa địa chỉ thành công' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Lỗi server', error });
   }

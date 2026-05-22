@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { formatPrice, useAppContext } from '@/context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -19,9 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function WishlistScreen() {
-  const { wishlist, products, toggleWishlist, addToCart, isAuthenticated } = useAppContext();
+  const { wishlist, products, toggleWishlist, addToCart, isAuthenticated, theme } = useAppContext();
   const [addedToCart, setAddedToCart] = useState<string | null>(null);
   const router = useRouter();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
 
   const handleAddToCart = (item: any) => {
     if (!isAuthenticated) {
@@ -38,19 +40,19 @@ export default function WishlistScreen() {
   const wishlistedProducts = products.filter((p) => wishlist.includes(p.id));
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
         <Header title="Yêu Thích" showBack={true} subtitle={`${wishlistedProducts.length} sản phẩm`} />
       </SafeAreaView>
 
       {wishlistedProducts.length === 0 ? (
         <View style={styles.emptyState}>
-          <View style={styles.emptyIconWrap}>
-            <Ionicons name="heart-outline" size={64} color={COLORS.borderLight} />
+          <View style={[styles.emptyIconWrap, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
+            <Ionicons name="heart-outline" size={64} color={currentTheme.textMuted} />
           </View>
-          <Text style={styles.emptyTitle}>Chưa có sản phẩm yêu thích</Text>
-          <Text style={styles.emptyDesc}>
+          <Text style={[styles.emptyTitle, { color: currentTheme.text }]}>Chưa có sản phẩm yêu thích</Text>
+          <Text style={[styles.emptyDesc, { color: currentTheme.textMuted }]}>
             Khám phá các bộ sưu tập và thêm những{'\n'}sản phẩm bạn yêu thích vào đây
           </Text>
           <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/collections')}>
@@ -61,13 +63,13 @@ export default function WishlistScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.grid}>
             {wishlistedProducts.map((item) => (
-              <View key={item.id} style={styles.card}>
+              <View key={item.id} style={[styles.card, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
                 <View style={styles.cardImageWrap}>
                   {item.image ? (
                     <Image source={item.image} style={styles.productImage} />
                   ) : (
-                    <View style={styles.cardImagePlaceholder}>
-                      <Ionicons name="diamond-outline" size={36} color={COLORS.borderLight} />
+                    <View style={[styles.cardImagePlaceholder, { backgroundColor: isDarkMode ? COLORS.bgCardLight : '#EAEAEA' }]}>
+                      <Ionicons name="diamond-outline" size={36} color={currentTheme.textMuted} />
                     </View>
                   )}
                   <TouchableOpacity style={styles.removeBtn} onPress={() => toggleWishlist(item.id)}>
@@ -81,11 +83,11 @@ export default function WishlistScreen() {
                 </View>
                 <View style={styles.cardInfo}>
                   <Text style={styles.cardCategory}>{item.category}</Text>
-                  <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
+                  <Text style={[styles.cardName, { color: currentTheme.text }]} numberOfLines={2}>{item.name}</Text>
                   <View style={styles.priceRow}>
-                    <Text style={styles.cardPrice}>{formatPrice(item.price)}</Text>
+                    <Text style={[styles.cardPrice, { color: currentTheme.text }]}>{formatPrice(item.price)}</Text>
                     {item.originalPrice && (
-                      <Text style={styles.cardOriginalPrice}>{formatPrice(item.originalPrice)}</Text>
+                      <Text style={[styles.cardOriginalPrice, { color: currentTheme.textMuted }]}>{formatPrice(item.originalPrice)}</Text>
                     )}
                   </View>
                   <TouchableOpacity
@@ -121,18 +123,18 @@ export default function WishlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bgDark },
-  safeArea: { backgroundColor: COLORS.bgDark },
+  container: { flex: 1 },
+  safeArea: {},
 
   // Empty State
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SPACING.xxxl },
   emptyIconWrap: {
     width: 120, height: 120, borderRadius: 60,
-    backgroundColor: COLORS.bgCard, justifyContent: 'center', alignItems: 'center',
-    marginBottom: SPACING.xxl, borderWidth: 1, borderColor: COLORS.border,
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: SPACING.xxl, borderWidth: 1,
   },
-  emptyTitle: { color: COLORS.white, fontSize: FONT_SIZES.xl, fontWeight: '500', marginBottom: SPACING.md },
-  emptyDesc: { color: COLORS.textMuted, fontSize: FONT_SIZES.md, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xxl },
+  emptyTitle: { fontSize: FONT_SIZES.xl, fontWeight: '500', marginBottom: SPACING.md },
+  emptyDesc: { fontSize: FONT_SIZES.md, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xxl },
   emptyBtn: { backgroundColor: COLORS.gold, paddingHorizontal: SPACING.xxxl, paddingVertical: SPACING.md, borderRadius: BORDER_RADIUS.sm },
   emptyBtnText: { color: COLORS.black, fontSize: FONT_SIZES.sm, fontWeight: '700', letterSpacing: 1.5 },
 
@@ -142,13 +144,13 @@ const styles = StyleSheet.create({
   },
   card: {
     width: (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.md) / 2,
-    backgroundColor: COLORS.bgCard, borderRadius: BORDER_RADIUS.lg,
+    borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden', marginBottom: SPACING.lg,
-    borderWidth: 0.5, borderColor: COLORS.border,
+    borderWidth: 0.5,
   },
   cardImageWrap: { height: 180, position: 'relative' },
   productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  cardImagePlaceholder: { flex: 1, backgroundColor: COLORS.bgCardLight, justifyContent: 'center', alignItems: 'center' },
+  cardImagePlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   removeBtn: {
     position: 'absolute', top: SPACING.sm, right: SPACING.sm,
     width: 28, height: 28, borderRadius: 14,
@@ -159,10 +161,10 @@ const styles = StyleSheet.create({
 
   cardInfo: { padding: SPACING.md },
   cardCategory: { color: COLORS.gold, fontSize: FONT_SIZES.xs, letterSpacing: 1, fontWeight: '500', marginBottom: SPACING.xs },
-  cardName: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '400', marginBottom: SPACING.sm, lineHeight: 20 },
+  cardName: { fontSize: FONT_SIZES.md, fontWeight: '400', marginBottom: SPACING.sm, lineHeight: 20 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md },
-  cardPrice: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '700' },
-  cardOriginalPrice: { color: COLORS.textMuted, fontSize: FONT_SIZES.sm, textDecorationLine: 'line-through' },
+  cardPrice: { fontSize: FONT_SIZES.md, fontWeight: '700' },
+  cardOriginalPrice: { fontSize: FONT_SIZES.sm, textDecorationLine: 'line-through' },
   addToCartBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: SPACING.sm, backgroundColor: COLORS.gold,

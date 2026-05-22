@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { api } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +15,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -85,15 +86,19 @@ export default function AddressesScreen() {
     setPickerType(null);
   };
 
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
+
   if (!isAuthenticated || !user) {
     return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-          <Header title="" showBack={true} />
+      <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+          <Header title="Địa Chỉ" showBack={true} />
         </SafeAreaView>
         <View style={styles.center}>
-          <Ionicons name="lock-closed-outline" size={64} color={COLORS.textMuted} />
-          <Text style={styles.emptyText}>Đăng nhập để quản lý địa chỉ</Text>
+          <Ionicons name="lock-closed-outline" size={64} color={currentTheme.textMuted} />
+          <Text style={[styles.emptyText, { color: currentTheme.textMuted }]}>Đăng nhập để quản lý địa chỉ</Text>
         </View>
       </View>
     );
@@ -108,6 +113,33 @@ export default function AddressesScreen() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleDeleteAddress = async (id: number) => {
+    Alert.alert(
+      "Xóa Địa Chỉ",
+      "Bạn có chắc chắn muốn xóa địa chỉ giao hàng này không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        { 
+          text: "Xóa", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              const res = await api.deleteAddress(user.uid, id);
+              if (res.success) {
+                fetchUserData();
+              } else {
+                alert("Có lỗi xảy ra khi xóa");
+              }
+            } catch (e) {
+              console.error(e);
+              alert("Lỗi kết nối");
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleAddAddress = async () => {
@@ -137,96 +169,122 @@ export default function AddressesScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Header title="" showBack={true} />
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
+        <Header title="Địa Chỉ Giao Hàng" showBack={true} />
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {addresses.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <Ionicons name="location-outline" size={64} color={COLORS.textMuted} />
-            <Text style={styles.emptyText}>Bạn chưa lưu địa chỉ nào</Text>
+            <Ionicons name="location-outline" size={64} color={currentTheme.textMuted} />
+            <Text style={[styles.emptyText, { color: currentTheme.textMuted }]}>Bạn chưa lưu địa chỉ nào</Text>
           </View>
         ) : (
           addresses.map((addr) => (
-            <View key={addr.id} style={[styles.addressCard, addr.isDefault && styles.addressCardDefault]}>
+            <View 
+              key={addr.id} 
+              style={[
+                styles.addressCard, 
+                { backgroundColor: currentTheme.card, borderColor: currentTheme.border },
+                addr.isDefault && { borderColor: currentTheme.accent, backgroundColor: isDarkMode ? 'rgba(201, 169, 110, 0.08)' : 'rgba(92, 64, 51, 0.05)' }
+              ]}>
               <View style={styles.addressLeft}>
                 <View style={styles.nameRow}>
-                  <Text style={styles.addrName}>{addr.name}</Text>
+                  <Text style={[styles.addrName, { color: currentTheme.text }]}>{addr.name}</Text>
                   {addr.isDefault && (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultBadgeText}>Mặc định</Text>
+                    <View style={[styles.defaultBadge, { backgroundColor: currentTheme.accent }]}>
+                      <Text style={[styles.defaultBadgeText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>Mặc định</Text>
                     </View>
                   )}
                 </View>
-                <Text style={styles.addrPhone}>{addr.phone}</Text>
-                <Text style={styles.addrLine}>{addr.address}</Text>
+                <Text style={[styles.addrPhone, { color: currentTheme.textMuted }]}>{addr.phone}</Text>
+                <Text style={[styles.addrLine, { color: currentTheme.text }]}>{addr.address}</Text>
 
                 {!addr.isDefault && (
-                  <TouchableOpacity style={styles.setDefBtn} onPress={() => handleSetDefault(addr.id)}>
-                    <Text style={styles.setDefText}>Thiết lập mặc định</Text>
+                  <TouchableOpacity style={[styles.setDefBtn, { borderColor: currentTheme.border }]} onPress={() => handleSetDefault(addr.id)}>
+                    <Text style={[styles.setDefText, { color: currentTheme.textMuted }]}>Thiết lập mặc định</Text>
                   </TouchableOpacity>
                 )}
               </View>
-              {addr.isDefault && (
-                <View style={styles.addressRight}>
-                  <Ionicons name="checkmark-circle" size={24} color={COLORS.gold} />
-                </View>
-              )}
+              <View style={styles.addressRightGroup}>
+                <TouchableOpacity 
+                  style={styles.deleteBtn} 
+                  onPress={() => handleDeleteAddress(addr.id)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+                </TouchableOpacity>
+                {addr.isDefault && (
+                  <Ionicons name="checkmark-circle" size={24} color={currentTheme.accent} />
+                )}
+              </View>
             </View>
           ))
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add-circle-outline" size={20} color={COLORS.black} />
-          <Text style={styles.addBtnText}>THÊM ĐỊA CHỈ MỚI</Text>
+      <View style={[styles.footer, { backgroundColor: currentTheme.background }]}>
+        <TouchableOpacity style={[styles.addBtn, { backgroundColor: currentTheme.accent }]} onPress={() => setModalVisible(true)}>
+          <Ionicons name="add-circle-outline" size={20} color={isDarkMode ? COLORS.black : COLORS.white} />
+          <Text style={[styles.addBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>THÊM ĐỊA CHỈ MỚI</Text>
         </TouchableOpacity>
       </View>
 
       {/* Modal Add Address */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalBg}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Thêm Địa Chỉ Giao Hàng</Text>
+          <View style={[styles.modalCard, { backgroundColor: currentTheme.background }]}>
+            <Text style={[styles.modalTitle, { color: currentTheme.accent }]}>Thêm Địa Chỉ Giao Hàng</Text>
             
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.inputWrap}>
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Thông tin người nhận</Text>
-                <TextInput style={styles.input} placeholderTextColor={COLORS.textMuted} placeholder="Họ và tên" value={name} onChangeText={setName} />
-                <TextInput style={styles.input} placeholderTextColor={COLORS.textMuted} placeholder="Số điện thoại" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+                <Text style={[styles.label, { color: currentTheme.text }]}>Thông tin người nhận</Text>
+                <TextInput 
+                  style={[styles.input, { backgroundColor: currentTheme.card, color: currentTheme.text, borderColor: currentTheme.border }]} 
+                  placeholderTextColor={currentTheme.textMuted} 
+                  placeholder="Họ và tên" 
+                  value={name} 
+                  onChangeText={setName} 
+                />
+                <TextInput 
+                  style={[styles.input, { backgroundColor: currentTheme.card, color: currentTheme.text, borderColor: currentTheme.border }]} 
+                  placeholderTextColor={currentTheme.textMuted} 
+                  placeholder="Số điện thoại" 
+                  value={phone} 
+                  onChangeText={setPhone} 
+                  keyboardType="phone-pad" 
+                />
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Vị trí nhận hàng</Text>
+                <Text style={[styles.label, { color: currentTheme.text }]}>Vị trí nhận hàng</Text>
                 
-                <TouchableOpacity style={styles.locationPicker} onPress={() => openPicker('prov')}>
-                  <Text style={[styles.pickerText, !selProv && {color: COLORS.textMuted}]}>
+                <TouchableOpacity style={[styles.locationPicker, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]} onPress={() => openPicker('prov')}>
+                  <Text style={[styles.pickerText, { color: currentTheme.text }, !selProv && {color: currentTheme.textMuted}]}>
                     {selProv ? selProv.name : 'Chọn Tỉnh / Thành Phố'}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color={COLORS.textMuted} />
+                  <Ionicons name="chevron-down" size={18} color={currentTheme.textMuted} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.locationPicker} onPress={() => openPicker('dist')}>
-                  <Text style={[styles.pickerText, !selDist && {color: COLORS.textMuted}]}>
+                <TouchableOpacity style={[styles.locationPicker, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]} onPress={() => openPicker('dist')}>
+                  <Text style={[styles.pickerText, { color: currentTheme.text }, !selDist && {color: currentTheme.textMuted}]}>
                     {selDist ? selDist.name : 'Chọn Quận / Huyện'}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color={COLORS.textMuted} />
+                  <Ionicons name="chevron-down" size={18} color={currentTheme.textMuted} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.locationPicker} onPress={() => openPicker('ward')}>
-                  <Text style={[styles.pickerText, !selWard && {color: COLORS.textMuted}]}>
+                <TouchableOpacity style={[styles.locationPicker, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]} onPress={() => openPicker('ward')}>
+                  <Text style={[styles.pickerText, { color: currentTheme.text }, !selWard && {color: currentTheme.textMuted}]}>
                     {selWard ? selWard.name : 'Chọn Phường / Xã'}
                   </Text>
-                  <Ionicons name="chevron-down" size={18} color={COLORS.textMuted} />
+                  <Ionicons name="chevron-down" size={18} color={currentTheme.textMuted} />
                 </TouchableOpacity>
 
                 <TextInput 
-                  style={[styles.input, { height: 80, textAlignVertical: 'top' }]} 
-                  placeholderTextColor={COLORS.textMuted} 
+                  style={[styles.input, { height: 80, textAlignVertical: 'top', backgroundColor: currentTheme.card, color: currentTheme.text, borderColor: currentTheme.border }]} 
+                  placeholderTextColor={currentTheme.textMuted} 
                   placeholder="Tên đường, Toà nhà, Số nhà..." 
                   value={street} 
                   onChangeText={setStreet} 
@@ -235,12 +293,12 @@ export default function AddressesScreen() {
               </View>
             </ScrollView>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>HUỶ</Text>
+            <View style={[styles.modalActions, { borderTopColor: currentTheme.border }]}>
+              <TouchableOpacity style={[styles.cancelBtn, { borderColor: currentTheme.border }]} onPress={() => setModalVisible(false)}>
+                <Text style={[styles.cancelBtnText, { color: currentTheme.textMuted }]}>HUỶ</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleAddAddress} disabled={isSaving}>
-                {isSaving ? <ActivityIndicator color={COLORS.black} /> : <Text style={styles.saveBtnText}>LƯU ĐỊA CHỈ</Text>}
+              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: currentTheme.accent }]} onPress={handleAddAddress} disabled={isSaving}>
+                {isSaving ? <ActivityIndicator color={isDarkMode ? COLORS.black : COLORS.white} /> : <Text style={[styles.saveBtnText, { color: isDarkMode ? COLORS.black : COLORS.white }]}>LƯU ĐỊA CHỈ</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -249,26 +307,26 @@ export default function AddressesScreen() {
         {/* Sub-modal cho việc chọn Tỉnh/Quận/Phường (đặt trong Modal Add Address để đè lên) */}
         {pickerType !== null && (
           <View style={styles.pickerOverlay}>
-            <View style={styles.pickerCard}>
-              <View style={styles.pickerHeader}>
-                <Text style={styles.pickerTitle}>
+            <View style={[styles.pickerCard, { backgroundColor: currentTheme.background }]}>
+              <View style={[styles.pickerHeader, { borderBottomColor: currentTheme.border }]}>
+                <Text style={[styles.pickerTitle, { color: currentTheme.text }]}>
                   {pickerType === 'prov' ? 'Chọn Tỉnh/Thành' : pickerType === 'dist' ? 'Chọn Quận/Huyện' : 'Chọn Phường/Xã'}
                 </Text>
                 <TouchableOpacity onPress={() => setPickerType(null)}>
-                  <Ionicons name="close" size={24} color={COLORS.white} />
+                  <Ionicons name="close" size={24} color={currentTheme.text} />
                 </TouchableOpacity>
               </View>
               {pickerData.length === 0 ? (
                 <View style={styles.pickerLoader}>
-                  <ActivityIndicator size="large" color={COLORS.gold} />
+                  <ActivityIndicator size="large" color={currentTheme.accent} />
                 </View>
               ) : (
                 <FlatList
                   data={pickerData}
                   keyExtractor={(item) => String(item.code)}
                   renderItem={({item}) => (
-                    <TouchableOpacity style={styles.pickerItem} onPress={() => selectPickerItem(item)}>
-                      <Text style={styles.pickerItemText}>{item.name}</Text>
+                    <TouchableOpacity style={[styles.pickerItem, { borderBottomColor: currentTheme.border }]} onPress={() => selectPickerItem(item)}>
+                      <Text style={[styles.pickerItemText, { color: currentTheme.text }]}>{item.name}</Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -305,6 +363,17 @@ const styles = StyleSheet.create({
   },
   addressLeft: { flex: 1 },
   addressRight: { justifyContent: 'center', paddingLeft: SPACING.md },
+  addressRightGroup: {
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingLeft: SPACING.md,
+  },
+  deleteBtn: {
+    padding: 6,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
+    marginBottom: SPACING.xs,
+  },
   
   nameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   addrName: { color: COLORS.white, fontWeight: 'bold', fontSize: FONT_SIZES.md, marginRight: SPACING.md },

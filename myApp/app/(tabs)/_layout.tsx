@@ -2,21 +2,26 @@ import { Drawer } from 'expo-router/drawer';
 import React from 'react';
 import { View, StyleSheet, Platform, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '@/constants/theme';
+import { COLORS, Theme } from '@/constants/theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useAppContext } from '@/context/AppContext';
 
 export default function DrawerLayout() {
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         screenOptions={{
           headerShown: false, // Mình tự có custom Header rồi nên tắt header mặc định của Drawer
-          drawerStyle: styles.drawer,
+          drawerStyle: [styles.drawer, { backgroundColor: currentTheme.background, borderRightColor: currentTheme.border }],
           drawerActiveTintColor: COLORS.gold,
           drawerActiveBackgroundColor: 'rgba(201, 169, 110, 0.1)',
-          drawerInactiveTintColor: COLORS.textMuted,
+          drawerInactiveTintColor: currentTheme.textMuted,
           drawerLabelStyle: styles.drawerLabel,
-          sceneStyle: { backgroundColor: COLORS.bgDark },
+          sceneStyle: { backgroundColor: currentTheme.background },
+          drawerContentStyle: { backgroundColor: currentTheme.background },
         }}>
         <Drawer.Screen
           name="index"
@@ -70,9 +75,7 @@ export default function DrawerLayout() {
 
 const styles = StyleSheet.create({
   drawer: {
-    backgroundColor: COLORS.bgDark,
     width: 280,
-    borderRightColor: COLORS.border,
     borderRightWidth: 1,
   },
   drawerLabel: {

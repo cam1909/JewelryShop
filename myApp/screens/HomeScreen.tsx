@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import SectionHeader from '@/components/SectionHeader';
 import ProductCard from '@/components/card/ProductCard';
-import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { BORDER_RADIUS, COLORS, FONT_SIZES, SPACING, Theme } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -41,6 +41,9 @@ const BENEFITS = [
 // ========== SUB-COMPONENTS ==========
 
 function HeroBanner() {
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const router = useRouter();
@@ -52,6 +55,17 @@ function HeroBanner() {
     ]).start();
   }, []);
 
+  // Màu sắc động cho nội dung banner
+  const overlayColor = isDarkMode ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0)'; // Remove overlay completely in light mode!
+  const subtitleColor = COLORS.gold;
+  const titleColor = COLORS.white;
+  const descColor = COLORS.textSecondary;
+  const shadowStyle = {
+    textShadowColor: 'rgba(0,0,0,0.95)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 10
+  };
+
   return (
     <View style={styles.heroBanner}>
       <View style={styles.heroImagePlaceholder}>
@@ -59,17 +73,17 @@ function HeroBanner() {
           source={require('@/assets/images/products/bg.png')}
           style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
         />
-        <View style={styles.heroGradientOverlay} />
+        <View style={[styles.heroGradientOverlay, { backgroundColor: overlayColor }]} />
       </View>
       <Animated.View
         style={[styles.heroContent, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         <View>
-          <Text style={styles.heroSubtitle}>BỘ SƯU TẬP MỚI 2025</Text>
-          <Text style={styles.heroTitleLine1}>Tinh Hoa</Text>
-          <Text style={styles.heroTitleLine2}>Trang Sức Việt</Text>
+          <Text style={[styles.heroSubtitle, { color: subtitleColor }, shadowStyle]}>BỘ SƯU TẬP MỚI 2025</Text>
+          <Text style={[styles.heroTitleLine1, { color: titleColor }, shadowStyle]}>Tinh Hoa</Text>
+          <Text style={[styles.heroTitleLine2, { color: titleColor }, shadowStyle]}>Trang Sức Việt</Text>
         </View>
         <View style={styles.heroBottomWrap}>
-          <Text style={styles.heroDesc}>
+          <Text style={[styles.heroDesc, { color: descColor }, shadowStyle]}>
             Tuyệt tác trang sức từ nghệ nhân lành nghề{'\n'}— Sang trọng, tinh tế & vĩnh cửu —
           </Text>
           <View style={styles.heroBtnRow}>
@@ -85,6 +99,9 @@ function HeroBanner() {
 
 function CategorySection() {
   const router = useRouter();
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+
   return (
     <View style={styles.section}>
       <SectionHeader
@@ -96,13 +113,13 @@ function CategorySection() {
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
             key={cat.id}
-            style={styles.categoryCard}
+            style={[styles.categoryCard, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}
             onPress={() => router.push(`/(tabs)/collections?category=${cat.name}` as any)}>
             <View style={styles.categoryIconWrap}>
               <Ionicons name={cat.icon} size={28} color={COLORS.gold} />
             </View>
-            <Text style={styles.categoryName}>{cat.name}</Text>
-            <Ionicons name="arrow-forward" size={14} color={COLORS.textMuted} />
+            <Text style={[styles.categoryName, { color: currentTheme.text }]}>{cat.name}</Text>
+            <Ionicons name="arrow-forward" size={14} color={currentTheme.textMuted} />
           </TouchableOpacity>
         ))}
       </View>
@@ -111,8 +128,11 @@ function CategorySection() {
 }
 
 function BenefitsSection() {
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+
   return (
-    <View style={styles.benefitsSection}>
+    <View style={[styles.benefitsSection, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
       <View style={styles.benefitsGrid}>
         {BENEFITS.map((b) => (
           <View key={b.id} style={styles.benefitCard}>
@@ -120,8 +140,8 @@ function BenefitsSection() {
               <Ionicons name={b.icon} size={24} color={COLORS.gold} />
             </View>
             <View style={styles.benefitTextWrap}>
-              <Text style={styles.benefitTitle}>{b.title}</Text>
-              <Text style={styles.benefitDesc}>{b.desc}</Text>
+              <Text style={[styles.benefitTitle, { color: currentTheme.text }]}>{b.title}</Text>
+              <Text style={[styles.benefitDesc, { color: currentTheme.textMuted }]}>{b.desc}</Text>
             </View>
           </View>
         ))}
@@ -131,7 +151,8 @@ function BenefitsSection() {
 }
 
 function FeaturedProducts() {
-  const { products } = useAppContext();
+  const { products, theme } = useAppContext();
+  const currentTheme = Theme[theme];
   const router = useRouter();
   const featured = products.slice(0, 4);
 
@@ -153,8 +174,8 @@ function FeaturedProducts() {
         scrollEnabled={false}
         contentContainerStyle={styles.productGrid}
       />
-      <TouchableOpacity style={styles.viewAllBtn} onPress={() => router.push('/(tabs)/collections' as any)}>
-        <Text style={styles.viewAllBtnText}>XEM TẤT CẢ SẢN PHẨM</Text>
+      <TouchableOpacity style={[styles.viewAllBtn, { borderColor: currentTheme.text }]} onPress={() => router.push('/(tabs)/collections' as any)}>
+        <Text style={[styles.viewAllBtnText, { color: currentTheme.text }]}>XEM TẤT CẢ SẢN PHẨM</Text>
       </TouchableOpacity>
     </View>
   );
@@ -162,11 +183,14 @@ function FeaturedProducts() {
 
 function StorySection() {
   const router = useRouter();
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+
   return (
-    <View style={styles.storySection}>
+    <View style={[styles.storySection, { backgroundColor: currentTheme.card, borderColor: currentTheme.border }]}>
       <Text style={styles.storySub}>CÂU CHUYỆN CỦA CHÚNG TÔI</Text>
-      <Text style={styles.storyTitle}>Nghệ Thuật{'\n'}Từ Thế Hệ Này{'\n'}Sang Thế Hệ Khác</Text>
-      <Text style={styles.storyDesc}>
+      <Text style={[styles.storyTitle, { color: currentTheme.text }]}>Nghệ Thuật{'\n'}Từ Thế Hệ Này{'\n'}Sang Thế Hệ Khác</Text>
+      <Text style={[styles.storyDesc, { color: currentTheme.textMuted }]}>
         Hơn 20 năm kinh nghiệm trong nghề kim hoàn, chúng tôi tự hào mang đến những tác phẩm trang sức tinh xảo nhất.
       </Text>
       <TouchableOpacity style={styles.storyBtn} onPress={() => router.push('/about' as any)}>
@@ -178,10 +202,13 @@ function StorySection() {
 }
 
 function HomeFooter() {
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+
   return (
-    <View style={styles.contactSection}>
+    <View style={[styles.contactSection, { backgroundColor: currentTheme.background, borderColor: currentTheme.border }]}>
       <Text style={styles.sectionSub}>LIÊN HỆ</Text>
-      <Text style={styles.sectionTitle}>Ghé Thăm Chúng Tôi</Text>
+      <Text style={[styles.sectionTitle, { color: currentTheme.text }]}>Ghé Thăm Chúng Tôi</Text>
       <View style={styles.sectionDividerWrap}>
         <View style={styles.sectionDivider} />
       </View>
@@ -196,7 +223,7 @@ function HomeFooter() {
           <View style={styles.contactIcon}>
             <Ionicons name={c.icon} size={20} color={COLORS.gold} />
           </View>
-          <Text style={styles.contactText}>{c.label}</Text>
+          <Text style={[styles.contactText, { color: currentTheme.textMuted }]}>{c.label}</Text>
         </View>
       ))}
 
@@ -207,13 +234,13 @@ function HomeFooter() {
           { icon: 'logo-instagram', link: 'https://www.instagram.com/cmcm.1909/?hl=vi' },
           { icon: 'logo-tiktok', link: 'https://zalo.me/0962977820' },
         ].map((social, i) => (
-          <TouchableOpacity key={i} style={styles.socialBtn} onPress={() => Linking.openURL(social.link)}>
+          <TouchableOpacity key={i} style={[styles.socialBtn, { borderColor: currentTheme.border }]} onPress={() => Linking.openURL(social.link)}>
             <Ionicons name={social.icon as any} size={22} color={COLORS.gold} />
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.copyright}>© 2025 VELMORA Jewelry House. All rights reserved.</Text>
+      <Text style={[styles.copyright, { color: currentTheme.textMuted }]}>© 2025 VELMORA Jewelry House. All rights reserved.</Text>
     </View>
   );
 }
@@ -221,10 +248,14 @@ function HomeFooter() {
 // ========== MAIN SCREEN ==========
 export default function HomeScreen() {
   const router = useRouter();
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+  const isDarkMode = theme === 'dark';
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bgDark} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={currentTheme.background} />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.background }]} edges={['top']}>
         <Header showMenu showSearch showNotification onSearchPress={() => router.push('/search')} />
       </SafeAreaView>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} bounces>

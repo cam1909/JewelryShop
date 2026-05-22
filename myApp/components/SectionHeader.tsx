@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES } from '@/constants/theme';
+import { COLORS, SPACING, FONT_SIZES, Theme } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
 
 interface SectionHeaderProps {
   subtitle: string;
@@ -10,10 +11,13 @@ interface SectionHeaderProps {
 }
 
 export default function SectionHeader({ subtitle, title, onPress }: SectionHeaderProps) {
+  const { theme } = useAppContext();
+  const currentTheme = Theme[theme];
+
   return (
     <View style={styles.container}>
       <Text style={styles.subtitle}>{subtitle}</Text>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: currentTheme.text }]}>{title}</Text>
       <View style={styles.divider} />
       {onPress && (
         <TouchableOpacity style={styles.viewAll} onPress={onPress}>
@@ -40,7 +44,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   title: {
-    color: COLORS.white,
     fontSize: FONT_SIZES.xxl,
     fontWeight: '300',
     fontStyle: 'italic',
